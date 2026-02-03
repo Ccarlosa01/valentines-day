@@ -19,16 +19,6 @@
       overflow:hidden;
     }
 
-    /* Original doodle stickers (cute beagle + little bird vibe) */
-    .doodles{ position:fixed; inset:0; pointer-events:none; opacity:.9; }
-    .sticker{
-      position:absolute; width:160px; height:160px;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.10));
-      opacity:.6; transform: rotate(var(--r));
-    }
-    .sticker.small{ width:120px; height:120px; opacity:.5;}
-    .sticker.tiny{ width:90px; height:90px; opacity:.45;}
-
     .card{
       width:min(92vw, 560px);
       background:var(--card);
@@ -73,11 +63,15 @@
       z-index:1;
     }
 
+    /* Keep buttons in a predictable stack order */
     .btns{
       display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
       margin-top:14px;
       align-items:center;
+      position:relative;
+      z-index:10; /* container above background */
     }
+
     button{
       border:0; border-radius:999px; padding:12px 18px;
       font-weight:800; font-size:16px; cursor:pointer;
@@ -88,8 +82,26 @@
       transform: scale(1);
     }
     button:active{transform: scale(.98)}
-    #yes{background:var(--yes); color:white}
-    #no{background:var(--no); color:white}
+
+    /* YES grows but stays behind NO */
+    #yes{
+      background:var(--yes); color:white;
+      position:relative;
+      z-index:1;
+      transform-origin: center bottom; /* grows upward, less overlap */
+    }
+
+    /* NO always above YES */
+    #no{
+      background:var(--no); color:white;
+      position:relative;
+      z-index:9999;
+    }
+    /* when NO runs away (fixed), keep it on top */
+    #no.runaway{
+      position:fixed;
+      z-index:99999;
+    }
 
     .result{
       margin-top:18px;
@@ -111,7 +123,7 @@
       animation: pop 1100ms ease-out forwards;
       pointer-events:none;
       filter: drop-shadow(0 8px 10px rgba(0,0,0,.18));
-      z-index:9999;
+      z-index:999999;
     }
     @keyframes pop{
       0%{opacity:0; transform:translate(-50%,-50%) scale(.8)}
@@ -121,48 +133,16 @@
   </style>
 </head>
 <body>
-
-  <!-- ORIGINAL doodle SVG stickers (NOT official Snoopy art) -->
-  <div class="doodles">
-    <!-- Top-left bird -->
-    <svg class="sticker small" style="left:14px; top:18px; --r:-10deg" viewBox="0 0 200 200" aria-hidden="true">
-      <ellipse cx="55" cy="70" rx="24" ry="20" fill="#ffd44d" stroke="#111" stroke-width="4"/>
-      <circle cx="45" cy="66" r="4" fill="#111"/>
-      <path d="M70 72 L86 66 L70 60" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M44 90 Q56 102 72 92" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
-      <text x="108" y="62" font-size="26">💗</text>
-      <text x="130" y="92" font-size="22">💖</text>
-    </svg>
-
-    <!-- Bottom-right beagle-ish -->
-    <svg class="sticker" style="right:10px; bottom:12px; --r:8deg" viewBox="0 0 200 200" aria-hidden="true">
-      <ellipse cx="105" cy="105" rx="62" ry="52" fill="#fff" stroke="#111" stroke-width="5"/>
-      <path d="M58 98 Q30 112 46 146 Q66 168 76 140 Q84 120 70 106" fill="#111"/>
-      <ellipse cx="132" cy="118" rx="10" ry="8" fill="#111"/>
-      <circle cx="118" cy="98" r="5" fill="#111"/>
-      <circle cx="145" cy="132" r="7" fill="#ff9bb0" opacity=".8"/>
-      <path d="M128 126 Q120 136 110 130" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
-      <path d="M70 150 Q105 170 142 150" fill="none" stroke="#ff2e63" stroke-width="8" stroke-linecap="round"/>
-      <text x="90" y="58" font-size="26">💘</text>
-    </svg>
-
-    <!-- Mid-right tiny heart -->
-    <svg class="sticker tiny" style="right:34px; top:120px; --r:14deg" viewBox="0 0 200 200" aria-hidden="true">
-      <path d="M52 110 Q68 80 88 104 Q104 76 122 106 Q140 140 104 150 Q70 146 52 110Z" fill="#fff" stroke="#111" stroke-width="5" />
-      <text x="78" y="125" font-size="26">💗</text>
-    </svg>
-  </div>
-
   <main class="card">
     <div class="emoji">💘</div>
     <h1>Will you be my Valentine?</h1>
     <p>One of these buttons is about to have a bad day 😌</p>
 
-    <div class="speech" id="speech">
-      <span id="speechText">A tiny bird says… press “Yes.”</span>
+    <div class="speech">
+      <span id="speechText">Be honest… you’re going to press “Yes.”</span>
     </div>
 
-    <div class="btns">
+    <div class="btns" id="btnRow">
       <button id="yes">Yes 💗</button>
       <button id="no">No 🙃</button>
     </div>
@@ -183,15 +163,17 @@
     const noBtn  = document.getElementById('no');
     const result = document.getElementById('result');
     const speechText = document.getElementById('speechText');
+    const btnRow = document.getElementById('btnRow');
+
     document.getElementById('today').textContent =
       new Date().toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
 
-    // 10-click journey (you can swap these lines)
+    // 10-click journey
     const noLines = [
       "Ouch. That’s one. 😭",
       "Two?? You’re committed.",
       "Three. I’m telling the tiny bird. 🐦",
-      "Four. The beagle is judging you.",
+      "Four. Whoever raised you… wow.",
       "Five. This is getting personal.",
       "Six. Your finger is BOLD today.",
       "Seven. Please… I’m fragile.",
@@ -215,14 +197,17 @@
       }
     }
 
+    function growYes(){
+      // Yes scales up each No click
+      const scale = Math.min(2.6, 1 + noClicks * 0.14);
+      yesBtn.style.transform = `scale(${scale})`;
+    }
+
     function moveNoAfterClick(){
-      // Move AFTER the click so the click always counts.
-      // Using a tiny timeout ensures the click is registered first.
+      // Move AFTER the click so the click always counts
       setTimeout(() => {
         const pad = 14;
-
-        // allow it to roam anywhere
-        noBtn.style.position = 'fixed';
+        noBtn.classList.add('runaway');
 
         const w = noBtn.offsetWidth;
         const h = noBtn.offsetHeight;
@@ -238,12 +223,6 @@
       }, 40);
     }
 
-    function growYes(){
-      // scale up each No click
-      const scale = Math.min(2.5, 1 + noClicks * 0.14);
-      yesBtn.style.transform = `scale(${scale})`;
-    }
-
     // YES click
     yesBtn.addEventListener('click', () => {
       result.classList.add('show');
@@ -255,51 +234,54 @@
       yesBtn.style.opacity = .85;
       noBtn.style.opacity  = .6;
 
-      speechText.textContent = "The tiny bird approves. 🐦💘";
+      speechText.textContent = "Correct choice 😌💘";
     });
 
-    // NO click logic (exact behavior requested)
+    // NO click: clickable for 10 clicks; each click updates speech, pops hearts, grows yes, then runs away
     noBtn.addEventListener('click', (e) => {
       e.preventDefault();
 
-      // still clickable for 10 clicks
       if (noClicks < 10){
         noClicks++;
 
-        // show next line
+        // show next line in bubble
         speechText.textContent = noLines[noClicks - 1];
 
         // hearts
         heartPop(6);
 
-        // yes gets bigger
+        // yes grows
         growYes();
 
-        // after each no click, it runs away (moves when you click it)
+        // after each click, no runs away (moves AFTER click)
         moveNoAfterClick();
 
-        // after the 10th click, override the speech bubble message
+        // after 10th click, bubble changes to this
         if (noClicks === 10){
           speechText.textContent = "Okay enough 😭";
         }
       } else {
-        // optional: after 10, keep it running and teasing if they somehow keep clicking
+        // optional extra behavior if they manage to keep clicking
+        speechText.textContent = "I SAID ENOUGH 😭";
         heartPop(4);
         moveNoAfterClick();
-        speechText.textContent = "I said ENOUGH 😭";
       }
     });
 
-    // keep it on-screen after resize
+    // Keep NO on-screen after resize
     window.addEventListener('resize', () => {
-      if (noBtn.style.position === 'fixed') {
-        // nudge to a safe spot
+      if (noBtn.classList.contains('runaway')) {
         const pad = 14;
         const w = noBtn.offsetWidth, h = noBtn.offsetHeight;
-        const x = Math.min(parseFloat(noBtn.style.left || pad), window.innerWidth - w - pad);
-        const y = Math.min(parseFloat(noBtn.style.top  || pad), window.innerHeight - h - pad);
-        noBtn.style.left = Math.max(pad, x) + 'px';
-        noBtn.style.top  = Math.max(pad, y) + 'px';
+
+        const curLeft = parseFloat(noBtn.style.left || pad);
+        const curTop  = parseFloat(noBtn.style.top  || pad);
+
+        const x = Math.max(pad, Math.min(window.innerWidth  - w - pad, curLeft));
+        const y = Math.max(pad, Math.min(window.innerHeight - h - pad, curTop));
+
+        noBtn.style.left = x + 'px';
+        noBtn.style.top  = y + 'px';
       }
     });
   </script>
