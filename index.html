@@ -51,7 +51,7 @@
       text-align:left;
     }
 
-    /* --- PLAYGROUND (buttons + bouncing GIF live here) --- */
+    /* --- PLAYGROUND --- */
     .playgroundWrap{ margin-top:18px; }
     .playground{
       width:100%;
@@ -59,24 +59,28 @@
       border-radius:18px;
       background:#fff0f4;
       position:relative;
-      overflow:hidden;          /* confines gifs and NO button */
-      isolation:isolate;        /* consistent layering */
+      overflow:hidden;          /* hard clip */
+      isolation:isolate;
     }
 
-    /* Bouncing GIF layer (behind buttons) */
+    /* GIF layer (ABOVE buttons visually, but unclickable) */
     .gifStage{
       position:absolute;
       inset:0;
-      z-index:0;
-      pointer-events:none;
-      opacity:.40; /* keep it clearly behind buttons */
+      z-index:8;                /* ABOVE buttons */
+      pointer-events:none;      /* buttons remain clickable */
+      opacity:.55;
+      overflow:hidden;
+      border-radius:18px;       /* extra safety */
+      clip-path: inset(0 round 18px); /* hard clip on all browsers */
     }
+
     .gifSprite{
       position:absolute;
       width:140px;
-      height:auto;
+      height:100px;             /* explicit height so clamping is correct */
+      object-fit:contain;
       will-change: transform;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.18));
       user-select:none;
       -webkit-user-drag:none;
     }
@@ -94,10 +98,10 @@
       position:absolute;
       white-space:nowrap;
       transition: transform .15s ease, opacity .15s ease;
-      z-index:5;                /* above gifStage */
+      z-index:5;
     }
 
-    /* YES: after 1st NO click it centers in the playground area */
+    /* YES: after 1st NO click it centers in the playground */
     #yes{
       background:var(--yes);
       color:white;
@@ -108,7 +112,7 @@
       z-index:5;
     }
 
-    /* NO: moves around inside playground, always above YES */
+    /* NO: moves around inside playground */
     #no{
       background:var(--no);
       color:white;
@@ -208,7 +212,6 @@
       "snoopy9.gif"
     ];
 
-    // Shuffle once so we never repeat
     function shuffle(arr){
       for (let i = arr.length - 1; i > 0; i--){
         const j = Math.floor(Math.random() * (i + 1));
@@ -216,10 +219,11 @@
       }
       return arr;
     }
+
     let gifQueue = shuffle([...gifPool]);
     let gifIndex = 0;
     function nextUniqueGif(){
-      if (gifIndex >= gifQueue.length) return null; // exhausted
+      if (gifIndex >= gifQueue.length) return null;
       const src = gifQueue[gifIndex];
       gifIndex++;
       return src;
@@ -287,13 +291,11 @@
 
     function placeNoAnywhereSafe(){
       const pad = 12;
-
       const areaRect = playground.getBoundingClientRect();
       const noRect = noBtn.getBoundingClientRect();
       const yesRect = yesBtn.getBoundingClientRect();
 
       const noW = noRect.width, noH = noRect.height;
-
       const maxX = Math.max(pad, areaRect.width  - noW - pad);
       const maxY = Math.max(pad, areaRect.height - noH - pad);
 
@@ -304,7 +306,7 @@
 
       const cushion = 14;
 
-      for(let i=0;i<140;i++){
+      for(let i=0;i<160;i++){
         const x = pad + Math.random() * (maxX - pad);
         const y = pad + Math.random() * (maxY - pad);
 
@@ -320,7 +322,6 @@
         }
       }
 
-      // fallback
       noBtn.style.left = `${pad}px`;
       noBtn.style.top  = `${Math.max(pad, maxY)}px`;
       noBtn.style.transform = `none`;
@@ -342,11 +343,7 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- BOUNCING GIF ENGINE ----------
-    // Each NO click spawns ONE bouncing sprite using a unique gif (no repeats).
-    // Sprites bounce ONLY inside playground bounds (WALLS ONLY).
-    // They do NOT collide with the YES button; they pass behind it.
-
+    // ---------- BOUNCING GIF ENGINE (WALLS ONLY) ----------
     let running = true;
     let rafId = null;
     const sprites = []; // { el, x, y, vx, vy, w, h }
@@ -357,51 +354,38 @@
       if (!running) return;
 
       const src = nextUniqueGif();
-      if (!src) return; // no repeats: once exhausted, stop spawning
+      if (!src) return;
 
       const img = document.createElement('img');
       img.className = 'gifSprite';
       img.alt = '';
 
-      // cache-bust ensures the gif starts animating immediately (still loops normally)
+      // cache-bust to ensure immediate animation start (still loops)
       img.src = src + "?v=" + Date.now();
 
       gifStage.appendChild(img);
 
+      // Use LOCAL bounds (same coordinate system as translate)
       const W = playground.clientWidth;
       const H = playground.clientHeight;
 
-      // temporary size until load (updated onload)
+      // sprite size must match CSS so clamp is exact
+      const w = 140;
+      const h = 100;
+
       const sprite = {
         el: img,
-        w: 140,
-        h: 90,
-        x: rand(0, Math.max(1, W - 140)),
-        y: rand(0, Math.max(1, H - 90)),
-        vx: rand(1.6, 3.2) * (Math.random() < 0.5 ? -1 : 1),
-        vy: rand(1.4, 2.9) * (Math.random() < 0.5 ? -1 : 1),
+        w, h,
+        x: rand(0, Math.max(1, W - w)),
+        y: rand(0, Math.max(1, H - h)),
+        vx: rand(1.8, 3.6) * (Math.random() < 0.5 ? -1 : 1),
+        vy: rand(1.6, 3.2) * (Math.random() < 0.5 ? -1 : 1),
       };
 
       sprites.push(sprite);
 
-      img.addEventListener('load', () => {
-        const w = 140;
-        const ratio = img.naturalWidth ? (img.naturalHeight / img.naturalWidth) : 0.65;
-        const h = Math.max(70, Math.min(180, Math.round(w * ratio)));
-
-        sprite.w = w;
-        sprite.h = h;
-
-        img.style.width = w + "px";
-        img.style.height = "auto";
-
-        // re-clamp after we know true size
-        const W2 = playground.clientWidth;
-        const H2 = playground.clientHeight;
-        sprite.x = Math.max(0, Math.min(sprite.x, W2 - sprite.w));
-        sprite.y = Math.max(0, Math.min(sprite.y, H2 - sprite.h));
-        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
-      });
+      // set initial position immediately
+      img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
 
       if (!rafId) rafId = requestAnimationFrame(tick);
     }
@@ -421,7 +405,7 @@
         s.x += s.vx;
         s.y += s.vy;
 
-        // Bounce only on playground walls
+        // Bounce ONLY on playground walls
         if (s.x <= 0){ s.x = 0; s.vx *= -1; }
         if (s.y <= 0){ s.y = 0; s.vy *= -1; }
         if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
@@ -450,11 +434,8 @@
       yesBtn.disabled = true;
       noBtn.disabled  = true;
 
-      // stop gifs once YES is clicked
-      stopGifs();
-
-      // BOTH buttons disappear
-      hideBothButtons();
+      stopGifs();        // stop + clear GIFs
+      hideBothButtons(); // both buttons disappear
     });
 
     noBtn.addEventListener('click', () => {
@@ -468,7 +449,7 @@
       heartPop(6);
       positionYes();
 
-      // Spawn a unique gif that bounces inside the playground (behind buttons)
+      // Spawn ONE unique looping GIF that bounces inside the playground
       spawnBouncingGif();
 
       // Move NO after click
@@ -488,7 +469,7 @@
     window.addEventListener('resize', () => {
       positionYes();
       if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
-      // sprites adapt automatically next tick because we read clientWidth/Height each frame
+      // sprites adapt automatically because tick reads playground.clientWidth/Height every frame
     });
   </script>
 </body>
