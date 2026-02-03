@@ -33,7 +33,7 @@
       text-align:center;
     }
 
-    /* --- PROMPT TEXT (must never be covered) --- */
+    /* --- PROMPT TEXT (never covered) --- */
     .textzone{
       position:relative;
       z-index:10;
@@ -51,16 +51,11 @@
       text-align:left;
     }
 
-    /* --- PLAYGROUND (buttons live here, never overlap prompt text) --- */
-    .playgroundWrap{
-      margin-top:18px;
-      position:relative;
-    }
-
+    /* --- PLAYGROUND (buttons live here) --- */
+    .playgroundWrap{ margin-top:18px; }
     .playground{
       width:100%;
-      min-height:220px;              /* can grow if YES gets big */
-      height:auto;
+      min-height:220px;         /* can grow if YES gets big */
       border-radius:18px;
       background:#fff0f4;
       position:relative;
@@ -82,16 +77,18 @@
       transition: transform .15s ease, opacity .15s ease;
     }
 
+    /* YES: starts at top center; after 1st NO press it becomes truly centered */
     #yes{
       background:var(--yes);
       color:white;
       left:50%;
       top:20px;
       transform:translateX(-50%) scale(1);
-      transform-origin:center bottom;
+      transform-origin:center center;
       z-index:1;
     }
 
+    /* NO: moves around inside playground, always above YES */
     #no{
       background:var(--no);
       color:white;
@@ -121,7 +118,7 @@
       z-index:10;
     }
 
-    /* hearts stay inside playground only */
+    /* hearts inside playground only */
     .pop{
       position:absolute;
       left:50%;
@@ -151,7 +148,6 @@
       </div>
     </div>
 
-    <!-- Buttons NEVER overlap the prompt because they're confined to this playground below -->
     <div class="playgroundWrap">
       <div class="playground" id="playground">
         <button id="yes">Yes 💗</button>
@@ -188,6 +184,7 @@
     ];
 
     let noClicks = 0;
+    let yesIsCentered = false; // becomes true after 1st NO press
 
     function heartPop(count=6){
       for(let i=0;i<count;i++){
@@ -201,32 +198,37 @@
       }
     }
 
-    function growYesAndResizeBox(){
-      const scale = Math.min(3.2, 1 + noClicks * 0.16);
-
-      // Keep YES centered at top of playground
-      yesBtn.style.left = '50%';
-      yesBtn.style.top = '20px';
-      yesBtn.style.transform = `translateX(-50%) scale(${scale})`;
-
-      // Ensure playground is tall enough so YES never spills out or crowds NO
-      // Measure the scaled height of YES (approx = offsetHeight * scale)
-      const scaledYesHeight = yesBtn.offsetHeight * scale;
-
-      // Required room: top padding + yes height + gap + no height + bottom padding
-      const gap = 36;
-      const padTop = 20;
-      const padBottom = 22;
-
-      const needed = padTop + scaledYesHeight + gap + noBtn.offsetHeight + padBottom;
-
-      // Increase min-height as needed (never shrink so it doesn't jump)
-      const currentMin = parseFloat(getComputedStyle(playground).minHeight) || 220;
-      const target = Math.max(currentMin, Math.ceil(needed));
-      playground.style.minHeight = `${target}px`;
+    function getYesScale(){
+      return Math.min(3.2, 1 + noClicks * 0.16);
     }
 
-    // place NO anywhere within the playground bounds, but not overlapping the YES button
+    function positionYes(){
+      const scale = getYesScale();
+
+      if (!yesIsCentered){
+        // initial layout: top center
+        yesBtn.style.left = '50%';
+        yesBtn.style.top = '20px';
+        yesBtn.style.transformOrigin = 'center center';
+        yesBtn.style.transform = `translateX(-50%) scale(${scale})`;
+      } else {
+        // after 1st NO press: true center of playground
+        yesBtn.style.left = '50%';
+        yesBtn.style.top = '50%';
+        yesBtn.style.transformOrigin = 'center center';
+        yesBtn.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      }
+
+      // Ensure playground is tall enough so centered YES doesn't clip
+      // Needed height roughly equals YES scaled height + padding margins
+      const scaledYesHeight = yesBtn.offsetHeight * scale;
+      const minNeeded = Math.ceil(scaledYesHeight + 120); // roomy buffer
+      const currentMin = parseFloat(getComputedStyle(playground).minHeight) || 220;
+      playground.style.minHeight = `${Math.max(currentMin, minNeeded)}px`;
+    }
+
+    // place NO anywhere inside playground bounds, but not overlapping the prompt text (it's in another zone)
+    // and avoid overlapping YES so the UI stays readable
     function placeNoAnywhereSafe(){
       const pad = 12;
 
@@ -239,27 +241,28 @@
       const maxX = Math.max(pad, area.width  - noW - pad);
       const maxY = Math.max(pad, area.height - noH - pad);
 
-      // Helper: check overlap between two rects in local coordinates
       function overlaps(ax, ay, aw, ah, bx, by, bw, bh){
         return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
       }
 
-      // YES rect translated into playground-local coordinates
+      // YES rect in playground-local coords
       const yesLocalX = yesRect.left - area.left;
       const yesLocalY = yesRect.top  - area.top;
       const yesLocalW = yesRect.width;
       const yesLocalH = yesRect.height;
 
-      // Try a bunch of random spots; if none, put it below YES safely.
-      for(let i=0;i<80;i++){
+      // If YES is huge, give NO some breathing room
+      const cushion = 14;
+
+      for(let i=0;i<120;i++){
         const x = pad + Math.random() * (maxX - pad);
         const y = pad + Math.random() * (maxY - pad);
 
-        // Keep NO from overlapping YES (with a little extra cushion)
-        const cushion = 10;
-        if(!overlaps(x, y, noW, noH,
-                     yesLocalX - cushion, yesLocalY - cushion,
-                     yesLocalW + cushion*2, yesLocalH + cushion*2)){
+        if(!overlaps(
+          x, y, noW, noH,
+          yesLocalX - cushion, yesLocalY - cushion,
+          yesLocalW + cushion*2, yesLocalH + cushion*2
+        )){
           noBtn.style.left = `${x}px`;
           noBtn.style.top  = `${y}px`;
           noBtn.style.transform = `none`;
@@ -267,15 +270,13 @@
         }
       }
 
-      // Fallback: park it under YES (still inside playground)
-      const fallbackX = Math.max(pad, Math.min(maxX, (area.width - noW) / 2));
-      const fallbackY = Math.max(pad, Math.min(maxY, yesLocalY + yesLocalH + 28));
-      noBtn.style.left = `${fallbackX}px`;
-      noBtn.style.top  = `${fallbackY}px`;
+      // fallback: try to park NO near bottom-left inside playground
+      noBtn.style.left = `${pad}px`;
+      noBtn.style.top  = `${Math.max(pad, maxY)}px`;
       noBtn.style.transform = `none`;
     }
 
-    function hideButtons(){
+    function hideBothButtons(){
       yesBtn.style.opacity = '0';
       noBtn.style.opacity = '0';
       setTimeout(() => {
@@ -284,42 +285,60 @@
       }, 160);
     }
 
+    function hideNoOnly(){
+      noBtn.disabled = true;
+      noBtn.style.opacity = '0';
+      setTimeout(() => { noBtn.style.display = 'none'; }, 160);
+    }
+
     // YES click: both buttons disappear
     yesBtn.addEventListener('click', () => {
       speechText.textContent = "Correct choice 😌💘";
       result.classList.add('show');
       heartPop(14);
+
       yesBtn.disabled = true;
       noBtn.disabled = true;
-      hideButtons();
+
+      hideBothButtons();
     });
 
-    // NO click: up to 10 clicks, then NO disappears
+    // NO click logic
     noBtn.addEventListener('click', () => {
       if (noClicks >= 10) return;
 
-      // show prompt line for this click
+      // show the line for this click
       speechText.textContent = noLines[noClicks];
 
       noClicks++;
 
-      heartPop(6);
-      growYesAndResizeBox();
+      // After the 1st NO press, center YES in the playground
+      if (!yesIsCentered){
+        yesIsCentered = true;
+      }
 
-      // Move NO after click within the white box area (playground), without covering YES
+      heartPop(6);
+      positionYes();
+
+      // Move NO after click, anywhere in playground
       setTimeout(placeNoAnywhereSafe, 30);
 
-      // After the 10th click, set message and hide ONLY NO
+      // After 10th NO press: message + NO disappears
       if (noClicks === 10){
         speechText.textContent = "Okay enough 😭";
-        noBtn.disabled = true;
-        noBtn.style.opacity = '0';
-        setTimeout(() => { noBtn.style.display = 'none'; }, 160);
+        hideNoOnly();
       }
     });
 
-    // On resize, keep NO safely in bounds if it's still visible
+    // Initial layout
+    window.addEventListener('load', () => {
+      positionYes();
+      // leave NO in default spot initially
+    });
+
     window.addEventListener('resize', () => {
+      // keep layout sane on resize
+      positionYes();
       if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
     });
   </script>
