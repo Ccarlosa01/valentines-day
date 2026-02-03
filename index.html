@@ -56,6 +56,9 @@
       position:relative;
       overflow:hidden;
       isolation:isolate;
+      /* NOTE: no padding/border so arena math stays simple */
+      border:0;
+      padding:0;
     }
 
     .gifStage{
@@ -200,6 +203,7 @@
     const playground = document.getElementById('playground');
     const gifStage = document.getElementById('gifStage');
 
+    // scale for gifs
     const GIF_SCALE = 0.3;
 
     const gifPool = [
@@ -280,6 +284,21 @@
       }
     }
 
+    // Single, consistent arena for BOTH gifs + no button: content box coords
+    function getArena(){
+      const rect = playground.getBoundingClientRect();
+      const cs = getComputedStyle(playground);
+      const borderL = parseFloat(cs.borderLeftWidth) || 0;
+      const borderT = parseFloat(cs.borderTopWidth) || 0;
+
+      return {
+        width: playground.clientWidth,
+        height: playground.clientHeight,
+        originX: rect.left + borderL,
+        originY: rect.top  + borderT
+      };
+    }
+
     function overlaps(ax, ay, aw, ah, bx, by, bw, bh){
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
@@ -290,17 +309,18 @@
       if (noBtn.style.display === 'none') return;
 
       const pad = 12;
-      const area = playground.getBoundingClientRect();
-      const noRect = noBtn.getBoundingClientRect();
+      const arena = getArena();
+
+      const noRect  = noBtn.getBoundingClientRect();
       const yesRect = yesBtn.getBoundingClientRect();
 
       const noW = noRect.width, noH = noRect.height;
 
-      const maxX = Math.max(pad, area.width - noW - pad);
-      const maxY = Math.max(pad, area.height - noH - pad);
+      const maxX = Math.max(pad, arena.width  - noW - pad);
+      const maxY = Math.max(pad, arena.height - noH - pad);
 
-      const yesX = yesRect.left - area.left;
-      const yesY = yesRect.top  - area.top;
+      const yesX = yesRect.left - arena.originX;
+      const yesY = yesRect.top  - arena.originY;
       const yesW = yesRect.width;
       const yesH = yesRect.height;
       const cushion = 16;
@@ -347,14 +367,13 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- GIF BOUNCE (vx and vy always set, scaled bounds never leave playground) ----------
+    // ---------- GIF BOUNCE (vx & vy always, scaled bounds never leave arena) ----------
     let running = true;
     let rafId = null;
     const sprites = []; // { el, x, y, vx, vy, w, h }
 
     function rand(min, max){ return Math.random() * (max - min) + min; }
     function randNonZero(minAbs, maxAbs){
-      // ensures not near 0
       const mag = rand(minAbs, maxAbs);
       return mag * (Math.random() < 0.5 ? -1 : 1);
     }
@@ -373,22 +392,20 @@
       gifStage.appendChild(img);
 
       img.addEventListener('load', () => {
-        const W = playground.clientWidth;
-        const H = playground.clientHeight;
+        const arena = getArena();
+        const W = arena.width;
+        const H = arena.height;
 
-        // TRUE pixel size
         const naturalW = img.naturalWidth || 120;
         const naturalH = img.naturalHeight || 90;
 
-        // SCALED size used for collision + centering
         const w = naturalW * GIF_SCALE;
         const h = naturalH * GIF_SCALE;
 
-        // Spawn center (using scaled size)
+        // Spawn centered in the SAME arena as the NO button
         let x = (W - w) / 2;
         let y = (H - h) / 2;
 
-        // Clamp to stay inside even if gif is large
         x = Math.max(0, Math.min(x, W - w));
         y = Math.max(0, Math.min(y, H - h));
 
@@ -396,7 +413,6 @@
           el: img,
           w, h,
           x, y,
-          // ALWAYS has both vx and vy (never 0)
           vx: randNonZero(1.4, 3.0),
           vy: randNonZero(1.2, 2.7),
         };
@@ -416,8 +432,9 @@
         return;
       }
 
-      const W = playground.clientWidth;
-      const H = playground.clientHeight;
+      const arena = getArena();
+      const W = arena.width;
+      const H = arena.height;
 
       for (const s of sprites){
         if (!s.el.isConnected) continue;
@@ -425,7 +442,7 @@
         s.x += s.vx;
         s.y += s.vy;
 
-        // Bounce on walls using scaled width/height
+        // Bounce on the same arena walls used by the NO button
         if (s.x <= 0){ s.x = 0; s.vx *= -1; }
         if (s.y <= 0){ s.y = 0; s.vy *= -1; }
         if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
