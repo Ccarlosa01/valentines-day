@@ -59,31 +59,35 @@
       border-radius:18px;
       background:#fff0f4;
       position:relative;
-      overflow:hidden;          /* hard clip */
+      overflow:hidden;          /* HARD CLIP for gif + no button */
       isolation:isolate;
     }
 
-    /* GIF layer (ABOVE buttons visually, but unclickable) */
+    /* GIF layer (behind buttons OR above visually—either works; this stays behind) */
     .gifStage{
       position:absolute;
       inset:0;
-      z-index:8;                /* ABOVE buttons */
-      pointer-events:none;      /* buttons remain clickable */
+      z-index:0;
+      pointer-events:none;
       opacity:.55;
       overflow:hidden;
-      border-radius:18px;       /* extra safety */
-      clip-path: inset(0 round 18px); /* hard clip on all browsers */
+      border-radius:18px;
+      clip-path: inset(0 round 18px);
     }
 
     .gifSprite{
       position:absolute;
       width:140px;
-      height:100px;             /* explicit height so clamping is correct */
+      height:100px;             /* explicit, so movement clamps correctly */
       object-fit:contain;
       will-change: transform;
       user-select:none;
       -webkit-user-drag:none;
+
+      opacity:0;                /* start invisible */
+      transition: opacity 420ms ease; /* fade in */
     }
+    .gifSprite.show{ opacity:1; }
 
     button{
       border:0;
@@ -174,9 +178,7 @@
 
     <div class="playgroundWrap">
       <div class="playground" id="playground">
-        <!-- GIFs bounce ONLY inside this playground -->
         <div class="gifStage" id="gifStage" aria-hidden="true"></div>
-
         <button id="yes">Yes 💗</button>
         <button id="no">No 🙃</button>
       </div>
@@ -212,6 +214,7 @@
       "snoopy9.gif"
     ];
 
+    // no-repeat order: shuffle once, then consume
     function shuffle(arr){
       for (let i = arr.length - 1; i > 0; i--){
         const j = Math.floor(Math.random() * (i + 1));
@@ -219,7 +222,6 @@
       }
       return arr;
     }
-
     let gifQueue = shuffle([...gifPool]);
     let gifIndex = 0;
     function nextUniqueGif(){
@@ -343,7 +345,7 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- BOUNCING GIF ENGINE (WALLS ONLY) ----------
+    // ---------- BOUNCING GIF ENGINE (STRICTLY INSIDE PLAYGROUND) ----------
     let running = true;
     let rafId = null;
     const sprites = []; // { el, x, y, vx, vy, w, h }
@@ -360,7 +362,7 @@
       img.className = 'gifSprite';
       img.alt = '';
 
-      // cache-bust to ensure immediate animation start (still loops)
+      // cache-bust starts the gif immediately (still loops forever)
       img.src = src + "?v=" + Date.now();
 
       gifStage.appendChild(img);
@@ -369,10 +371,11 @@
       const W = playground.clientWidth;
       const H = playground.clientHeight;
 
-      // sprite size must match CSS so clamp is exact
+      // MUST match CSS gifSprite width/height for exact clamping
       const w = 140;
       const h = 100;
 
+      // Spawn FULLY inside playground (never outside)
       const sprite = {
         el: img,
         w, h,
@@ -384,8 +387,9 @@
 
       sprites.push(sprite);
 
-      // set initial position immediately
+      // Place immediately, then fade in
       img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
+      requestAnimationFrame(() => img.classList.add('show'));
 
       if (!rafId) rafId = requestAnimationFrame(tick);
     }
@@ -449,7 +453,7 @@
       heartPop(6);
       positionYes();
 
-      // Spawn ONE unique looping GIF that bounces inside the playground
+      // Spawn one unique looping GIF that bounces inside the playground, fades in
       spawnBouncingGif();
 
       // Move NO after click
@@ -469,7 +473,7 @@
     window.addEventListener('resize', () => {
       positionYes();
       if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
-      // sprites adapt automatically because tick reads playground.clientWidth/Height every frame
+      // sprites adapt automatically because tick reads clientWidth/Height every frame
     });
   </script>
 </body>
