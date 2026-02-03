@@ -22,266 +22,186 @@
     .card{
       width:min(92vw, 560px);
       background:var(--card);
-      border:1px solid #ffffff80;
-      backdrop-filter: blur(10px);
       border-radius:26px;
       padding:28px 22px;
       box-shadow: 0 18px 60px rgba(0,0,0,.18);
       text-align:center;
       position:relative;
     }
+
     h1{ margin:0 0 10px; font-size:clamp(28px, 4vw, 42px); }
-    p{ margin:0 0 14px; font-size:clamp(15px, 2.2vw, 18px); line-height:1.35; }
+    p{ margin:0 0 14px; font-size:clamp(15px, 2.2vw, 18px); }
 
     .speech{
       margin:14px auto 8px;
-      width:min(520px, 100%);
+      width:100%;
       background:#fff;
       border:2px solid #111;
       border-radius:18px;
       padding:12px 14px;
-      position:relative;
-      text-align:left;
       font-weight:650;
     }
-    .speech:after{
-      content:"";
-      position:absolute;
-      left:34px; bottom:-14px;
-      width:0; height:0;
-      border:14px solid transparent;
-      border-top-color:#111;
-      filter: drop-shadow(0 3px 0 rgba(0,0,0,.05));
-    }
-    .speech:before{
-      content:"";
-      position:absolute;
-      left:36px; bottom:-11px;
-      width:0; height:0;
-      border:12px solid transparent;
-      border-top-color:#fff;
-      z-index:1;
-    }
 
-    /* Keep buttons in a predictable stack order */
     .btns{
-      display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
-      margin-top:14px;
-      align-items:center;
       position:relative;
-      z-index:10; /* container above background */
+      display:flex;
+      justify-content:center;
+      gap:16px;
+      margin-top:18px;
+      height:80px; /* gives NO room to move locally */
     }
 
     button{
-      border:0; border-radius:999px; padding:12px 18px;
-      font-weight:800; font-size:16px; cursor:pointer;
-      transition: transform .12s ease, box-shadow .2s ease, opacity .2s ease;
+      border:0;
+      border-radius:999px;
+      padding:12px 18px;
+      font-weight:800;
+      font-size:16px;
+      cursor:pointer;
       box-shadow: 0 10px 22px rgba(0,0,0,.12);
-      user-select:none;
-      touch-action: manipulation;
-      transform: scale(1);
+      transition: transform .12s ease;
     }
-    button:active{transform: scale(.98)}
 
-    /* YES grows but stays behind NO */
     #yes{
-      background:var(--yes); color:white;
+      background:var(--yes);
+      color:white;
       position:relative;
       z-index:1;
-      transform-origin: center bottom; /* grows upward, less overlap */
+      transform-origin:center bottom;
     }
 
-    /* NO always above YES */
     #no{
-      background:var(--no); color:white;
-      position:relative;
-      z-index:9999;
+      background:var(--no);
+      color:white;
+      position:absolute; /* local movement */
+      left:50%;
+      transform:translateX(-50%);
+      z-index:5;
     }
-    /* when NO runs away (fixed), keep it on top */
-    #no.runaway{
-      position:fixed;
-      z-index:99999;
-    }
+
+    #no.runaway{ z-index:999; }
 
     .result{
+      display:none;
       margin-top:18px;
-      padding:14px 14px;
+      padding:14px;
       background:#ffffffb8;
       border-radius:18px;
-      border:1px solid #ffffff90;
-      display:none;
     }
     .result.show{display:block}
 
-    .emoji{font-size:36px}
     footer{margin-top:14px; font-size:12px; opacity:.75}
 
-    /* floating hearts */
     .pop{
-      position:fixed; left:50%; top:50%;
-      font-size:18px; transform: translate(-50%,-50%);
+      position:fixed;
+      left:50%;
+      top:50%;
+      font-size:18px;
       animation: pop 1100ms ease-out forwards;
       pointer-events:none;
-      filter: drop-shadow(0 8px 10px rgba(0,0,0,.18));
-      z-index:999999;
     }
     @keyframes pop{
-      0%{opacity:0; transform:translate(-50%,-50%) scale(.8)}
-      15%{opacity:1}
-      100%{opacity:0; transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.35)}
+      to{
+        opacity:0;
+        transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.35);
+      }
     }
   </style>
 </head>
 <body>
+
   <main class="card">
-    <div class="emoji">💘</div>
-    <h1>Will you be my Valentine?</h1>
-    <p>One of these buttons is about to have a bad day 😌</p>
+    <h1>Will you be my Valentine? 💘</h1>
+    <p>Be careful with that “No” 😌</p>
 
     <div class="speech">
-      <span id="speechText">Be honest… you’re going to press “Yes.”</span>
+      <span id="speechText">Just press Yes, we both know it.</span>
     </div>
 
-    <div class="btns" id="btnRow">
+    <div class="btns" id="btnArea">
       <button id="yes">Yes 💗</button>
       <button id="no">No 🙃</button>
     </div>
 
     <section id="result" class="result">
-      <h2 style="margin:0 0 6px;">WOOOO! 🥹💞</h2>
-      <p style="margin:0 0 10px;">You just unlocked: snacks, cuddles, and me being annoyingly happy all day.</p>
-      <p style="margin:0;">🍫💐🎬</p>
+      <h2>Correct choice 🥹💞</h2>
+      <p>You just unlocked snacks, cuddles, and happiness.</p>
     </section>
 
     <footer>
-      made with chaos + love • <span id="today"></span>
+      made with chaos + love
     </footer>
   </main>
 
   <script>
     const yesBtn = document.getElementById('yes');
-    const noBtn  = document.getElementById('no');
-    const result = document.getElementById('result');
+    const noBtn = document.getElementById('no');
     const speechText = document.getElementById('speechText');
-    const btnRow = document.getElementById('btnRow');
+    const result = document.getElementById('result');
+    const btnArea = document.getElementById('btnArea');
 
-    document.getElementById('today').textContent =
-      new Date().toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
-
-    // 10-click journey
     const noLines = [
-      "Ouch. That’s one. 😭",
-      "Two?? You’re committed.",
-      "Three. I’m telling the tiny bird. 🐦",
-      "Four. Whoever raised you… wow.",
-      "Five. This is getting personal.",
-      "Six. Your finger is BOLD today.",
-      "Seven. Please… I’m fragile.",
-      "Eight. I’m about to start crying (real).",
-      "Nine. Last chance to act right.",
-      "Ten. Okay you’re doing too much."
+      "Ouch. One 😭",
+      "Two??",
+      "Three. Bold.",
+      "Four. Wow.",
+      "Five. Personal now.",
+      "Six. Stop 😭",
+      "Seven. Please.",
+      "Eight. I’m fragile.",
+      "Nine. Last chance.",
+      "Ten. Okay enough 😭"
     ];
 
     let noClicks = 0;
 
-    function heartPop(count=8){
+    function heartPop(count=6){
       for(let i=0;i<count;i++){
-        const s = document.createElement('div');
-        s.className = 'pop';
-        s.textContent = Math.random() > .5 ? '💖' : '💗';
-        s.style.setProperty('--x', (Math.random()*420 - 210).toFixed(0) + 'px');
-        s.style.setProperty('--y', (Math.random()*420 - 210).toFixed(0) + 'px');
-        s.style.fontSize = (14 + Math.random()*18).toFixed(0) + 'px';
-        document.body.appendChild(s);
-        setTimeout(()=>s.remove(), 1200);
+        const h = document.createElement('div');
+        h.className = 'pop';
+        h.textContent = Math.random() > .5 ? '💖' : '💗';
+        h.style.setProperty('--x', `${Math.random()*160 - 80}px`);
+        h.style.setProperty('--y', `${Math.random()*160 - 80}px`);
+        document.body.appendChild(h);
+        setTimeout(()=>h.remove(), 1100);
       }
     }
 
     function growYes(){
-      // Yes scales up each No click
-      const scale = Math.min(2.6, 1 + noClicks * 0.14);
-      yesBtn.style.transform = `scale(${scale})`;
+      yesBtn.style.transform = `scale(${1 + noClicks * 0.15})`;
     }
 
-    function moveNoAfterClick(){
-      // Move AFTER the click so the click always counts
-      setTimeout(() => {
-        const pad = 14;
-        noBtn.classList.add('runaway');
+    function moveNoNearYes(){
+      const area = btnArea.getBoundingClientRect();
+      const yes = yesBtn.getBoundingClientRect();
 
-        const w = noBtn.offsetWidth;
-        const h = noBtn.offsetHeight;
+      const radius = 60; // keeps NO close
+      const offsetX = (Math.random() * radius * 2) - radius;
+      const offsetY = (Math.random() * 30) - 15;
 
-        const maxX = window.innerWidth  - w - pad;
-        const maxY = window.innerHeight - h - pad;
+      const centerX = yes.left - area.left + yes.width / 2;
+      const centerY = yes.top - area.top + yes.height / 2;
 
-        const x = Math.max(pad, Math.min(maxX, Math.random()*maxX));
-        const y = Math.max(pad, Math.min(maxY, Math.random()*maxY));
-
-        noBtn.style.left = x + 'px';
-        noBtn.style.top  = y + 'px';
-      }, 40);
+      noBtn.classList.add('runaway');
+      noBtn.style.left = `${centerX + offsetX}px`;
+      noBtn.style.top  = `${centerY + offsetY}px`;
     }
 
-    // YES click
     yesBtn.addEventListener('click', () => {
       result.classList.add('show');
-      heartPop(18);
-
-      yesBtn.disabled = true;
-      noBtn.disabled  = true;
-
-      yesBtn.style.opacity = .85;
-      noBtn.style.opacity  = .6;
-
       speechText.textContent = "Correct choice 😌💘";
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      heartPop(14);
     });
 
-    // NO click: clickable for 10 clicks; each click updates speech, pops hearts, grows yes, then runs away
-    noBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-
-      if (noClicks < 10){
+    noBtn.addEventListener('click', () => {
+      if(noClicks < 10){
+        speechText.textContent = noLines[noClicks];
         noClicks++;
-
-        // show next line in bubble
-        speechText.textContent = noLines[noClicks - 1];
-
-        // hearts
-        heartPop(6);
-
-        // yes grows
         growYes();
-
-        // after each click, no runs away (moves AFTER click)
-        moveNoAfterClick();
-
-        // after 10th click, bubble changes to this
-        if (noClicks === 10){
-          speechText.textContent = "Okay enough 😭";
-        }
-      } else {
-        // optional extra behavior if they manage to keep clicking
-        speechText.textContent = "I SAID ENOUGH 😭";
-        heartPop(4);
-        moveNoAfterClick();
-      }
-    });
-
-    // Keep NO on-screen after resize
-    window.addEventListener('resize', () => {
-      if (noBtn.classList.contains('runaway')) {
-        const pad = 14;
-        const w = noBtn.offsetWidth, h = noBtn.offsetHeight;
-
-        const curLeft = parseFloat(noBtn.style.left || pad);
-        const curTop  = parseFloat(noBtn.style.top  || pad);
-
-        const x = Math.max(pad, Math.min(window.innerWidth  - w - pad, curLeft));
-        const y = Math.max(pad, Math.min(window.innerHeight - h - pad, curTop));
-
-        noBtn.style.left = x + 'px';
-        noBtn.style.top  = y + 'px';
+        heartPop();
+        moveNoNearYes();
       }
     });
   </script>
