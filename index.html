@@ -347,12 +347,17 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- GIF BOUNCE (uses true pixel dims, scaled) ----------
+    // ---------- GIF BOUNCE (vx and vy always set, scaled bounds never leave playground) ----------
     let running = true;
     let rafId = null;
-    const sprites = []; // { el, x, y, vx, vy, w, h, naturalW, naturalH }
+    const sprites = []; // { el, x, y, vx, vy, w, h }
 
     function rand(min, max){ return Math.random() * (max - min) + min; }
+    function randNonZero(minAbs, maxAbs){
+      // ensures not near 0
+      const mag = rand(minAbs, maxAbs);
+      return mag * (Math.random() < 0.5 ? -1 : 1);
+    }
 
     function spawnBouncingGif(){
       if (!running) return;
@@ -368,32 +373,32 @@
       gifStage.appendChild(img);
 
       img.addEventListener('load', () => {
-        // true pixel size of the gif
-        const naturalW = img.naturalWidth || 120;
-        const naturalH = img.naturalHeight || 90;
-
-        // scaled pixel size used for collision/centering
-        const w = naturalW; // * GIF_SCALE;
-        const h = naturalH; // * GIF_SCALE;
-
         const W = playground.clientWidth;
         const H = playground.clientHeight;
 
-        // spawn EXACTLY centered using scaled size
+        // TRUE pixel size
+        const naturalW = img.naturalWidth || 120;
+        const naturalH = img.naturalHeight || 90;
+
+        // SCALED size used for collision + centering
+        const w = naturalW * GIF_SCALE;
+        const h = naturalH * GIF_SCALE;
+
+        // Spawn center (using scaled size)
         let x = (W - w) / 2;
         let y = (H - h) / 2;
 
-        // clamp inside (in case gif > playground)
+        // Clamp to stay inside even if gif is large
         x = Math.max(0, Math.min(x, W - w));
         y = Math.max(0, Math.min(y, H - h));
 
         const sprite = {
           el: img,
-          naturalW, naturalH,
           w, h,
           x, y,
-          vx: rand(1.6, 3.0) * (Math.random() < 0.5 ? -1 : 1),
-          vy: rand(1.4, 2.7) * (Math.random() < 0.5 ? -1 : 1),
+          // ALWAYS has both vx and vy (never 0)
+          vx: randNonZero(1.4, 3.0),
+          vy: randNonZero(1.2, 2.7),
         };
 
         sprites.push(sprite);
@@ -420,7 +425,7 @@
         s.x += s.vx;
         s.y += s.vy;
 
-        // clamp/bounce using SCALED pixel sizes (true gif size * scale)
+        // Bounce on walls using scaled width/height
         if (s.x <= 0){ s.x = 0; s.vx *= -1; }
         if (s.y <= 0){ s.y = 0; s.vy *= -1; }
         if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
@@ -465,7 +470,6 @@
       positionYes();
       spawnBouncingGif();
 
-      // move NO after layout updates so YES rect is accurate
       requestAnimationFrame(() => moveNoButton());
 
       if (noClicks === 10){
