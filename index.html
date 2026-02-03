@@ -71,7 +71,6 @@
       border-radius:18px;
       clip-path: inset(0 round 18px);
 
-      /* edge fade */
       -webkit-mask-image: radial-gradient(circle at 50% 50%,
         rgba(0,0,0,1) 0%,
         rgba(0,0,0,1) 45%,
@@ -82,10 +81,9 @@
         rgba(0,0,0,1) 45%,
         rgba(0,0,0,.55) 68%,
         rgba(0,0,0,0) 88%);
-      opacity:.9; /* overall intensity */
+      opacity:.9;
     }
 
-    /* IMPORTANT: do NOT resize gifs. We keep their natural size. */
     .gifSprite{
       position:absolute;
       left:0;
@@ -111,7 +109,7 @@
       touch-action: manipulation;
       position:absolute;
       white-space:nowrap;
-      transition: transform .15s ease, opacity .15s ease;
+      transition: transform .15s ease, opacity .15s ease, left .15s ease, top .15s ease;
       z-index:5;
     }
 
@@ -207,6 +205,8 @@
     const playground = document.getElementById('playground');
     const gifStage = document.getElementById('gifStage');
 
+    const GIF_SCALE = 0.6;
+
     const gifPool = [
       "snoopy1.gif",
       "snoopy2.gif",
@@ -289,32 +289,45 @@
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
 
-    function placeNoAnywhereSafe(){
+    // Moves NO to a random spot inside playground, avoiding the YES button area.
+    // Guarantees movement by avoiding last position too.
+    let lastNoPos = { x: null, y: null };
+
+    function moveNoButton(){
+      if (noBtn.style.display === 'none') return;
+
       const pad = 12;
-      const areaRect = playground.getBoundingClientRect();
+      const area = playground.getBoundingClientRect();
       const noRect = noBtn.getBoundingClientRect();
       const yesRect = yesBtn.getBoundingClientRect();
 
       const noW = noRect.width, noH = noRect.height;
-      const maxX = Math.max(pad, areaRect.width  - noW - pad);
-      const maxY = Math.max(pad, areaRect.height - noH - pad);
 
-      const yesLocalX = yesRect.left - areaRect.left;
-      const yesLocalY = yesRect.top  - areaRect.top;
-      const yesLocalW = yesRect.width;
-      const yesLocalH = yesRect.height;
+      const maxX = Math.max(pad, area.width - noW - pad);
+      const maxY = Math.max(pad, area.height - noH - pad);
 
-      const cushion = 14;
+      // YES bounds in playground coords
+      const yesX = yesRect.left - area.left;
+      const yesY = yesRect.top  - area.top;
+      const yesW = yesRect.width;
+      const yesH = yesRect.height;
+      const cushion = 16;
 
-      for(let i=0;i<160;i++){
+      for (let i=0; i<260; i++){
         const x = pad + Math.random() * (maxX - pad);
         const y = pad + Math.random() * (maxY - pad);
 
-        if (!overlaps(
+        // avoid being too close to previous spot (so it definitely "moves")
+        const farEnough = (lastNoPos.x === null) ||
+          (Math.hypot(x - lastNoPos.x, y - lastNoPos.y) > 30);
+
+        const overlapsYes = overlaps(
           x, y, noW, noH,
-          yesLocalX - cushion, yesLocalY - cushion,
-          yesLocalW + cushion*2, yesLocalH + cushion*2
-        )){
+          yesX - cushion, yesY - cushion, yesW + cushion*2, yesH + cushion*2
+        );
+
+        if (farEnough && !overlapsYes){
+          lastNoPos = { x, y };
           noBtn.style.left = `${x}px`;
           noBtn.style.top  = `${y}px`;
           noBtn.style.transform = `none`;
@@ -322,8 +335,10 @@
         }
       }
 
+      // fallback
+      lastNoPos = { x: pad, y: maxY };
       noBtn.style.left = `${pad}px`;
-      noBtn.style.top  = `${Math.max(pad, maxY)}px`;
+      noBtn.style.top  = `${maxY}px`;
       noBtn.style.transform = `none`;
     }
 
@@ -342,7 +357,7 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- GIF BOUNCE (inside playground, natural gif size, spawn centered) ----------
+    // ---------- GIF BOUNCE (spawn centered, scaled, bounce inside playground) ----------
     let running = true;
     let rafId = null;
     const sprites = []; // { el, x, y, vx, vy, w, h }
@@ -358,22 +373,22 @@
       const img = document.createElement('img');
       img.className = 'gifSprite';
       img.alt = '';
-
-      // cache-bust to guarantee it starts animating immediately (still loops)
       img.src = src + "?v=" + Date.now();
 
       gifStage.appendChild(img);
 
-      // wait for natural size so we don't resize
       img.addEventListener('load', () => {
         const W = playground.clientWidth;
         const H = playground.clientHeight;
 
-        // natural rendered size (no resizing)
-        const w = img.naturalWidth || img.width || 120;
-        const h = img.naturalHeight || img.height || 90;
+        const naturalW = img.naturalWidth || 120;
+        const naturalH = img.naturalHeight || 90;
 
-        // Center spawn: place so its center aligns with playground center
+        // scaled size used for centering + bounce math
+        const w = naturalW * GIF_SCALE;
+        const h = naturalH * GIF_SCALE;
+
+        // true center spawn (using scaled size)
         let x = (W - w) / 2;
         let y = (H - h) / 2;
 
@@ -385,17 +400,17 @@
           el: img,
           w, h,
           x, y,
-          vx: rand(1.8, 3.6) * (Math.random() < 0.5 ? -1 : 1),
-          vy: rand(1.6, 3.2) * (Math.random() < 0.5 ? -1 : 1),
+          vx: rand(1.6, 3.0) * (Math.random() < 0.5 ? -1 : 1),
+          vy: rand(1.4, 2.7) * (Math.random() < 0.5 ? -1 : 1),
         };
 
         sprites.push(sprite);
 
-        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
+        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px) scale(${GIF_SCALE})`;
         requestAnimationFrame(() => img.classList.add('show'));
 
         if (!rafId) rafId = requestAnimationFrame(tick);
-      });
+      }, { once:true });
     }
 
     function tick(){
@@ -413,13 +428,13 @@
         s.x += s.vx;
         s.y += s.vy;
 
-        // bounce ONLY on playground walls
+        // bounce only on playground walls using SCALED bounds
         if (s.x <= 0){ s.x = 0; s.vx *= -1; }
         if (s.y <= 0){ s.y = 0; s.vy *= -1; }
         if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
         if (s.y + s.h >= H){ s.y = Math.max(0, H - s.h); s.vy *= -1; }
 
-        s.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
+        s.el.style.transform = `translate(${s.x}px, ${s.y}px) scale(${GIF_SCALE})`;
       }
 
       rafId = requestAnimationFrame(tick);
@@ -449,18 +464,22 @@
     noBtn.addEventListener('click', () => {
       if (noClicks >= 10) return;
 
+      // show next line
       speechText.textContent = noLines[noClicks];
       noClicks++;
 
+      // after 1st NO click: center YES inside playground
       if (noClicks === 1) yesCenteredInPlayground = true;
 
+      // hearts + YES grows + move NO + spawn centered gif
       heartPop(6);
       positionYes();
-
-      // Spawn centered, natural-size, fade-in gif
       spawnBouncingGif();
 
-      setTimeout(placeNoAnywhereSafe, 30);
+      // IMPORTANT: move NO AFTER layout updates so YES rect is correct
+      requestAnimationFrame(() => {
+        moveNoButton();
+      });
 
       if (noClicks === 10){
         speechText.textContent = "Okay enough 😭";
@@ -474,8 +493,7 @@
 
     window.addEventListener('resize', () => {
       positionYes();
-      if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
-      // sprites adapt naturally; bounce walls update next frame
+      if (noBtn.style.display !== 'none') moveNoButton();
     });
   </script>
 </body>
