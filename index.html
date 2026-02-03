@@ -85,7 +85,7 @@
       opacity:.9; /* overall intensity */
     }
 
-    /* IMPORTANT: do NOT resize gifs. We keep their natural size (we'll SCALE via transform). */
+    /* IMPORTANT: do NOT resize gifs. We keep their natural size. */
     .gifSprite{
       position:absolute;
       left:0;
@@ -342,9 +342,7 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- GIF BOUNCE (inside playground, spawn centered, SCALE=0.6) ----------
-    const GIF_SCALE = 0.6;
-
+    // ---------- GIF BOUNCE (inside playground, natural gif size, spawn centered) ----------
     let running = true;
     let rafId = null;
     const sprites = []; // { el, x, y, vx, vy, w, h }
@@ -360,25 +358,26 @@
       const img = document.createElement('img');
       img.className = 'gifSprite';
       img.alt = '';
-      img.src = src + "?v=" + Date.now(); // still loops, just starts immediately
+
+      // cache-bust to guarantee it starts animating immediately (still loops)
+      img.src = src + "?v=" + Date.now();
 
       gifStage.appendChild(img);
 
+      // wait for natural size so we don't resize
       img.addEventListener('load', () => {
         const W = playground.clientWidth;
         const H = playground.clientHeight;
 
-        // natural size, but bounce math uses scaled size so it stays inside
-        const naturalW = img.naturalWidth || img.width || 120;
-        const naturalH = img.naturalHeight || img.height || 90;
-        const w = naturalW * GIF_SCALE;
-        const h = naturalH * GIF_SCALE;
+        // natural rendered size (no resizing)
+        const w = img.naturalWidth || img.width || 120;
+        const h = img.naturalHeight || img.height || 90;
 
-        // spawn centered
+        // Center spawn: place so its center aligns with playground center
         let x = (W - w) / 2;
         let y = (H - h) / 2;
 
-        // clamp
+        // clamp inside walls
         x = Math.max(0, Math.min(x, W - w));
         y = Math.max(0, Math.min(y, H - h));
 
@@ -392,11 +391,11 @@
 
         sprites.push(sprite);
 
-        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px) scale(${GIF_SCALE})`;
+        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
         requestAnimationFrame(() => img.classList.add('show'));
 
         if (!rafId) rafId = requestAnimationFrame(tick);
-      }, { once: true });
+      });
     }
 
     function tick(){
@@ -414,13 +413,13 @@
         s.x += s.vx;
         s.y += s.vy;
 
-        // bounce ONLY on playground walls (using scaled size)
+        // bounce ONLY on playground walls
         if (s.x <= 0){ s.x = 0; s.vx *= -1; }
         if (s.y <= 0){ s.y = 0; s.vy *= -1; }
         if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
         if (s.y + s.h >= H){ s.y = Math.max(0, H - s.h); s.vy *= -1; }
 
-        s.el.style.transform = `translate(${s.x}px, ${s.y}px) scale(${GIF_SCALE})`;
+        s.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
       }
 
       rafId = requestAnimationFrame(tick);
@@ -458,6 +457,7 @@
       heartPop(6);
       positionYes();
 
+      // Spawn centered, natural-size, fade-in gif
       spawnBouncingGif();
 
       setTimeout(placeNoAnywhereSafe, 30);
@@ -475,6 +475,7 @@
     window.addEventListener('resize', () => {
       positionYes();
       if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
+      // sprites adapt naturally; bounce walls update next frame
     });
   </script>
 </body>
