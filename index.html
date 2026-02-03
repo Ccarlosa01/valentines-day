@@ -19,21 +19,27 @@
       place-items:center;
       font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+      color:var(--text);
     }
 
     .card{
-      width:min(92vw, 560px);
+      width:min(92vw, 600px);
       background:var(--card);
       border-radius:26px;
-      padding:28px 22px 34px;
+      padding:26px 22px 22px;
       box-shadow:0 18px 60px rgba(0,0,0,.18);
-      text-align:center;
       position:relative;
-      overflow:hidden; /* HARD CLIP */
+      overflow:hidden; /* keep NO inside the white box */
+      text-align:center;
     }
 
+    /* --- TEXT ZONE (must never be covered) --- */
+    .textzone{
+      position:relative;
+      z-index:5; /* keep above everything */
+    }
     h1{margin:0 0 10px;font-size:clamp(28px,4vw,42px)}
-    p{margin:0 0 14px;font-size:clamp(15px,2.2vw,18px)}
+    p{margin:0 0 12px;font-size:clamp(15px,2.2vw,18px); line-height:1.3}
 
     .speech{
       background:#fff;
@@ -41,13 +47,18 @@
       border-radius:18px;
       padding:12px 14px;
       font-weight:650;
-      margin:14px 0 18px;
+      margin:14px 0 0;
+      text-align:left;
     }
 
-    /* Button area acts as movement playground */
-    .btns{
+    /* --- PLAYGROUND ZONE (buttons live here) --- */
+    .playground{
+      margin-top:18px;
       position:relative;
-      height:110px;   /* movement sandbox */
+      height:210px;           /* fixed space so buttons never cover text */
+      border-radius:18px;
+      background: #fff0f4;    /* subtle panel so user knows it's the play area */
+      overflow:hidden;        /* hard clip inside playground */
     }
 
     button{
@@ -58,47 +69,55 @@
       font-size:16px;
       cursor:pointer;
       box-shadow:0 10px 22px rgba(0,0,0,.12);
-      transition:transform .15s ease;
       user-select:none;
+      touch-action: manipulation;
+      position:absolute;
+      transition: transform .15s ease;
+      white-space:nowrap;
     }
 
+    /* YES grows, but stays inside the playground */
     #yes{
       background:var(--yes);
       color:white;
-      position:absolute;
       left:50%;
-      top:10px;
+      top:22px;
       transform:translateX(-50%) scale(1);
-      z-index:1;
       transform-origin:center bottom;
+      z-index:1;
     }
 
+    /* NO can travel anywhere in the playground (white box area), always above YES */
     #no{
       background:var(--no);
       color:white;
-      position:absolute;
       left:50%;
-      top:58px;
+      top:110px;
       transform:translateX(-50%);
-      z-index:2; /* always above YES */
+      z-index:999;
     }
 
     .result{
       display:none;
-      margin-top:18px;
+      margin-top:16px;
       padding:14px;
       background:#fff0f4;
       border-radius:18px;
       font-weight:600;
+      position:relative;
+      z-index:5; /* also above buttons, but it's below playground anyway */
     }
     .result.show{display:block}
 
     footer{
-      margin-top:14px;
+      margin-top:12px;
       font-size:12px;
       opacity:.7;
+      position:relative;
+      z-index:5;
     }
 
+    /* hearts stay inside playground, so they also won't cover text */
     .pop{
       position:absolute;
       left:50%;
@@ -106,6 +125,7 @@
       font-size:18px;
       animation:pop 900ms ease-out forwards;
       pointer-events:none;
+      z-index:50;
     }
     @keyframes pop{
       to{
@@ -120,21 +140,24 @@
 </head>
 <body>
 
-  <main class="card" id="card">
-    <h1>Will you be my Valentine? 💘</h1>
-    <p>Careful with that “No”…</p>
+  <main class="card">
+    <div class="textzone">
+      <h1>Will you be my Valentine? 💘</h1>
+      <p>Careful with that “No”…</p>
 
-    <div class="speech">
-      <span id="speechText">Just press Yes, we both know it.</span>
+      <div class="speech">
+        <span id="speechText">Just press Yes, we both know it.</span>
+      </div>
     </div>
 
-    <div class="btns" id="btnArea">
+    <!-- Buttons are constrained to this playground so they never cover the text -->
+    <div class="playground" id="playground">
       <button id="yes">Yes 💗</button>
       <button id="no">No 🙃</button>
     </div>
 
     <section id="result" class="result">
-      Correct choice 🥹💞  
+      Correct choice 🥹💞<br/>
       Snacks, cuddles, and happiness unlocked.
     </section>
 
@@ -146,7 +169,7 @@
     const noBtn = document.getElementById('no');
     const speechText = document.getElementById('speechText');
     const result = document.getElementById('result');
-    const btnArea = document.getElementById('btnArea');
+    const playground = document.getElementById('playground');
 
     const noLines = [
       "Ouch. One 😭",
@@ -163,44 +186,45 @@
 
     let noClicks = 0;
 
+    // place a button at a random spot inside the playground, fully within bounds
+    function placeWithinPlayground(el){
+      const pad = 10;
+      const area = playground.getBoundingClientRect();
+
+      // temporarily ensure we measure its current size accurately
+      const rect = el.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      const maxX = Math.max(pad, area.width  - w - pad);
+      const maxY = Math.max(pad, area.height - h - pad);
+
+      const x = pad + Math.random() * (maxX - pad);
+      const y = pad + Math.random() * (maxY - pad);
+
+      el.style.left = `${x}px`;
+      el.style.top  = `${y}px`;
+      el.style.transform = `none`;
+    }
+
     function heartPop(count=6){
       for(let i=0;i<count;i++){
         const h = document.createElement('div');
         h.className = 'pop';
         h.textContent = Math.random() > .5 ? '💖' : '💗';
-        h.style.setProperty('--x', `${Math.random()*120 - 60}px`);
-        h.style.setProperty('--y', `${Math.random()*80 - 40}px`);
-        btnArea.appendChild(h);
+        h.style.setProperty('--x', `${Math.random()*160 - 80}px`);
+        h.style.setProperty('--y', `${Math.random()*120 - 60}px`);
+        playground.appendChild(h);
         setTimeout(()=>h.remove(),900);
       }
     }
 
     function growYes(){
-      yesBtn.style.transform =
-        `translateX(-50%) scale(${1 + noClicks * 0.15})`;
-    }
-
-    function moveNoInsideBox(){
-      const area = btnArea.getBoundingClientRect();
-      const noRect = noBtn.getBoundingClientRect();
-
-      const padding = 10;
-
-      const maxX = area.width - noRect.width - padding;
-      const maxY = area.height - noRect.height - padding;
-
-      const x = Math.max(
-        padding,
-        Math.min(maxX, Math.random() * maxX)
-      );
-      const y = Math.max(
-        padding,
-        Math.min(maxY, Math.random() * maxY)
-      );
-
-      noBtn.style.left = `${x}px`;
-      noBtn.style.top  = `${y}px`;
-      noBtn.style.transform = `none`;
+      // Yes grows, but it's constrained to the playground (and won't cover text)
+      const scale = Math.min(2.3, 1 + noClicks * 0.14);
+      yesBtn.style.transform = `translateX(-50%) scale(${scale})`;
+      yesBtn.style.left = '50%';
+      yesBtn.style.top = '22px';
     }
 
     yesBtn.addEventListener('click', () => {
@@ -209,16 +233,39 @@
       heartPop(12);
       yesBtn.disabled = true;
       noBtn.disabled = true;
+      yesBtn.style.opacity = .9;
+      noBtn.style.opacity = .7;
     });
 
+    // NO click: 10 clicks; each click updates speech, pops hearts, grows yes, and NO moves anywhere in the white box (playground)
     noBtn.addEventListener('click', () => {
-      if(noClicks < 10){
+      if (noClicks < 10){
         speechText.textContent = noLines[noClicks];
         noClicks++;
+        heartPop(6);
         growYes();
-        heartPop();
-        moveNoInsideBox();
+
+        // move after click, but stay within playground bounds
+        setTimeout(() => placeWithinPlayground(noBtn), 30);
+
+        // after the 10th click, force the bubble message
+        if (noClicks === 10){
+          speechText.textContent = "Okay enough 😭";
+        }
       }
+    });
+
+    // On load, make sure NO is inside playground (in case fonts load late)
+    window.addEventListener('load', () => {
+      // keep default start positions; but ensure bounds if needed
+      // (optional) uncomment to randomize initial NO position:
+      // placeWithinPlayground(noBtn);
+    });
+
+    // If screen resizes, keep NO within bounds
+    window.addEventListener('resize', () => {
+      // if NO is currently out of bounds, just re-place it
+      placeWithinPlayground(noBtn);
     });
   </script>
 </body>
