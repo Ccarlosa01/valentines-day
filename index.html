@@ -51,15 +51,34 @@
       text-align:left;
     }
 
-    /* --- PLAYGROUND (buttons live here) --- */
+    /* --- PLAYGROUND (buttons + bouncing GIF live here) --- */
     .playgroundWrap{ margin-top:18px; }
     .playground{
       width:100%;
-      min-height:240px;         /* can grow if YES gets big */
+      min-height:260px;         /* can grow if YES gets big */
       border-radius:18px;
       background:#fff0f4;
       position:relative;
       overflow:hidden;
+      isolation:isolate;        /* keeps z-index layering reliable */
+    }
+
+    /* Bouncing GIF layer (behind buttons) */
+    .gifStage{
+      position:absolute;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:.55;              /* intensity */
+    }
+    .gifSprite{
+      position:absolute;
+      width:140px;              /* sprite size; tweak if you want */
+      height:auto;
+      will-change: transform;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.18));
+      user-select:none;
+      -webkit-user-drag:none;
     }
 
     button{
@@ -75,9 +94,10 @@
       position:absolute;
       white-space:nowrap;
       transition: transform .15s ease, opacity .15s ease;
+      z-index:5;
     }
 
-    /* YES starts near the top; after 1st NO press it centers INSIDE the playground area */
+    /* YES: after 1st NO click it centers in the playground area */
     #yes{
       background:var(--yes);
       color:white;
@@ -85,17 +105,17 @@
       top:22px;
       transform:translateX(-50%) scale(1);
       transform-origin:center center;
-      z-index:1;
+      z-index:5;
     }
 
-    /* NO moves around inside playground, always above YES */
+    /* NO: moves around inside playground, always above YES */
     #no{
       background:var(--no);
       color:white;
       left:50%;
       top:125px;
       transform:translateX(-50%);
-      z-index:5;
+      z-index:6;
     }
 
     .result{
@@ -126,7 +146,7 @@
       font-size:18px;
       animation:pop 900ms ease-out forwards;
       pointer-events:none;
-      z-index:50;
+      z-index:7;
     }
     @keyframes pop{
       to{
@@ -150,6 +170,9 @@
 
     <div class="playgroundWrap">
       <div class="playground" id="playground">
+        <!-- Bouncing GIF layer (behind buttons) -->
+        <div class="gifStage" id="gifStage" aria-hidden="true"></div>
+
         <button id="yes">Yes 💗</button>
         <button id="no">No 🙃</button>
       </div>
@@ -164,12 +187,28 @@
   </main>
 
   <script>
+    // ---------- ELEMENTS ----------
     const yesBtn = document.getElementById('yes');
     const noBtn = document.getElementById('no');
     const speechText = document.getElementById('speechText');
     const result = document.getElementById('result');
     const playground = document.getElementById('playground');
+    const gifStage = document.getElementById('gifStage');
 
+    // ---------- YOUR GIFS (in repo root, next to index.html) ----------
+    const gifPool = [
+      "snoopy1.gif",
+      "snoopy2.gif",
+      "snoopy3.gif",
+      "snoopy4.gif",
+      "snoopy5.gif",
+      "snoopy6.gif",
+      "snoopy7.gif",
+      "snoopy8.gif",
+      "snoopy9.gif"
+    ];
+
+    // ---------- NO PROMPT LINES ----------
     const noLines = [
       "Ouch. One 😭",
       "Two??",
@@ -184,8 +223,9 @@
     ];
 
     let noClicks = 0;
-    let yesCenteredInPlayground = false; // flips true after 1st NO click
+    let yesCenteredInPlayground = false;
 
+    // ---------- HEARTS ----------
     function heartPop(count=6){
       for(let i=0;i<count;i++){
         const h = document.createElement('div');
@@ -198,24 +238,17 @@
       }
     }
 
+    // ---------- YES POSITION + PLAYGROUND RESIZE ----------
     function getYesScale(){
       return Math.min(3.2, 1 + noClicks * 0.16);
     }
 
     function ensurePlaygroundFits(scale){
-      // ensure YES never clips (and leaves room for NO to exist somewhere)
+      // keep the YES button from clipping the playground as it grows
       const scaledYesH = yesBtn.offsetHeight * scale;
-      const scaledYesW = yesBtn.offsetWidth * scale;
-
-      // room cushion so NO can still be placed around
-      const minH = Math.ceil(Math.max(240, scaledYesH + 140));
-      const minW = 0; // width is already full, no need
-
-      const currentMinH = parseFloat(getComputedStyle(playground).minHeight) || 240;
+      const minH = Math.ceil(Math.max(260, scaledYesH + 160));
+      const currentMinH = parseFloat(getComputedStyle(playground).minHeight) || 260;
       playground.style.minHeight = `${Math.max(currentMinH, minH)}px`;
-
-      // NOTE: if YES gets huge and approaches edges, placement logic below avoids overlap
-      void scaledYesW; // keep for clarity; not needed explicitly
     }
 
     function positionYes(){
@@ -223,18 +256,17 @@
       ensurePlaygroundFits(scale);
 
       if (!yesCenteredInPlayground){
-        // BEFORE 1st NO press: top-center inside playground
         yesBtn.style.left = '50%';
         yesBtn.style.top  = '22px';
         yesBtn.style.transform = `translateX(-50%) scale(${scale})`;
       } else {
-        // AFTER 1st NO press: center of PLAYGROUND (the area we set)
         yesBtn.style.left = '50%';
         yesBtn.style.top  = '50%';
         yesBtn.style.transform = `translate(-50%, -50%) scale(${scale})`;
       }
     }
 
+    // ---------- NO MOVEMENT (avoid overlapping YES for readability) ----------
     function overlaps(ax, ay, aw, ah, bx, by, bw, bh){
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
@@ -247,11 +279,9 @@
       const yesRect = yesBtn.getBoundingClientRect();
 
       const noW = noRect.width, noH = noRect.height;
-
       const maxX = Math.max(pad, area.width  - noW - pad);
       const maxY = Math.max(pad, area.height - noH - pad);
 
-      // YES rect in playground-local coords
       const yesLocalX = yesRect.left - area.left;
       const yesLocalY = yesRect.top  - area.top;
       const yesLocalW = yesRect.width;
@@ -263,7 +293,6 @@
         const x = pad + Math.random() * (maxX - pad);
         const y = pad + Math.random() * (maxY - pad);
 
-        // keep NO from overlapping YES
         if (!overlaps(
           x, y, noW, noH,
           yesLocalX - cushion, yesLocalY - cushion,
@@ -275,13 +304,13 @@
           return;
         }
       }
-
-      // fallback: bottom-left
+      // fallback
       noBtn.style.left = `${pad}px`;
       noBtn.style.top  = `${Math.max(pad, maxY)}px`;
       noBtn.style.transform = `none`;
     }
 
+    // ---------- BUTTON HIDES ----------
     function hideBothButtons(){
       yesBtn.style.opacity = '0';
       noBtn.style.opacity = '0';
@@ -297,7 +326,111 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // YES click: both disappear
+    // ---------- BOUNCING GIF ENGINE ----------
+    // We spawn ONE bouncing sprite on each NO click.
+    // It bounces inside the playground, behind the buttons.
+    // On YES click, we stop animation + remove sprites.
+
+    let running = true;
+    let rafId = null;
+
+    const sprites = []; // { el, x, y, vx, vy, w, h }
+
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+    function pickRandomGif(){
+      return gifPool[Math.floor(Math.random() * gifPool.length)];
+    }
+
+    function spawnBouncingGif(){
+      if (!running) return;
+
+      const img = document.createElement('img');
+      img.className = 'gifSprite';
+      img.alt = '';
+      img.decoding = 'async';
+      img.loading = 'eager';
+
+      // cache-bust so it replays from start
+      img.src = pickRandomGif() + "?v=" + Date.now();
+
+      gifStage.appendChild(img);
+
+      const area = playground.getBoundingClientRect();
+
+      // initial position near center-ish
+      const startX = rand(area.width * 0.25, area.width * 0.65);
+      const startY = rand(area.height * 0.20, area.height * 0.70);
+
+      // velocity (pixels per frame-ish; tuned for "fluid")
+      const vx = rand(1.6, 3.2) * (Math.random() < 0.5 ? -1 : 1);
+      const vy = rand(1.3, 2.8) * (Math.random() < 0.5 ? -1 : 1);
+
+      const sprite = { el: img, x: startX, y: startY, vx, vy, w: 140, h: 90, ready: false };
+      sprites.push(sprite);
+
+      // once image loads, measure its true size
+      img.addEventListener('load', () => {
+        // keep width fixed, compute height by natural ratio
+        const w = 140;
+        const ratio = img.naturalHeight && img.naturalWidth ? (img.naturalHeight / img.naturalWidth) : 0.65;
+        const h = Math.max(70, Math.min(160, Math.round(w * ratio)));
+        sprite.w = w;
+        sprite.h = h;
+        img.style.width = w + "px";
+        img.style.height = "auto";
+        sprite.ready = true;
+
+        // clamp inside bounds after we know size
+        sprite.x = Math.min(Math.max(0, sprite.x), area.width - sprite.w);
+        sprite.y = Math.min(Math.max(0, sprite.y), area.height - sprite.h);
+        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
+      });
+
+      // start loop if not already
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    }
+
+    function tick(){
+      if (!running){
+        rafId = null;
+        return;
+      }
+
+      const area = playground.getBoundingClientRect();
+      const W = area.width;
+      const H = area.height;
+
+      for (const s of sprites){
+        if (!s.el.isConnected) continue;
+
+        // if size not ready, still move with defaults
+        const w = s.w || 140;
+        const h = s.h || 90;
+
+        s.x += s.vx;
+        s.y += s.vy;
+
+        // bounce on walls
+        if (s.x <= 0){ s.x = 0; s.vx *= -1; }
+        if (s.y <= 0){ s.y = 0; s.vy *= -1; }
+        if (s.x + w >= W){ s.x = Math.max(0, W - w); s.vx *= -1; }
+        if (s.y + h >= H){ s.y = Math.max(0, H - h); s.vy *= -1; }
+
+        s.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function stopGifs(){
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+      sprites.length = 0;
+      gifStage.innerHTML = "";
+    }
+
+    // ---------- EVENTS ----------
     yesBtn.addEventListener('click', () => {
       speechText.textContent = "Correct choice 😌💘";
       result.classList.add('show');
@@ -306,35 +439,41 @@
       yesBtn.disabled = true;
       noBtn.disabled  = true;
 
+      // stop playing gifs forever after YES
+      stopGifs();
+
+      // BOTH buttons disappear
       hideBothButtons();
     });
 
-    // NO click
     noBtn.addEventListener('click', () => {
       if (noClicks >= 10) return;
 
+      // update prompt line for this click
       speechText.textContent = noLines[noClicks];
       noClicks++;
 
-      // After 1st NO press, center YES in the playground area
-      if (noClicks === 1) {
-        yesCenteredInPlayground = true;
-      }
+      // after 1st NO press: center YES in the playground area
+      if (noClicks === 1) yesCenteredInPlayground = true;
 
       heartPop(6);
+
+      // grow + reposition YES
       positionYes();
 
-      // Move NO after click, anywhere in playground
+      // play a RANDOM bouncing gif behind the buttons
+      spawnBouncingGif();
+
+      // move NO after click, anywhere safe in playground
       setTimeout(placeNoAnywhereSafe, 30);
 
-      // After 10th press: message + NO disappears
+      // after 10th NO press: NO disappears
       if (noClicks === 10){
         speechText.textContent = "Okay enough 😭";
         hideNoOnly();
       }
     });
 
-    // Initial layout
     window.addEventListener('load', () => {
       positionYes();
     });
@@ -342,6 +481,7 @@
     window.addEventListener('resize', () => {
       positionYes();
       if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
+      // sprites will naturally use updated bounds on next tick
     });
   </script>
 </body>
