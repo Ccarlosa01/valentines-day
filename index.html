@@ -2,61 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Be My Valentine 💘</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine? 💘</title>
   <style>
     :root{
-      --bg1:#ffdde1; --bg2:#ee9ca7; --card:#ffffffcc;
-      --text:#2b2b2b; --yes:#ff4d6d; --no:#6c757d;
+      --bg1:#ffe3ea; --bg2:#ffb3c1;
+      --card:#ffffffcc; --text:#1f1f1f;
+      --yes:#ff2e63; --no:#343a40;
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      min-height:100vh; display:grid; place-items:center; color:var(--text);
+      margin:0; min-height:100vh; display:grid; place-items:center;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
       background: radial-gradient(circle at top, var(--bg1), var(--bg2));
       overflow:hidden;
     }
-    .hearts{
-      position:fixed; inset:0; pointer-events:none; opacity:.25;
-      background-image:
-        radial-gradient(circle at 20% 30%, #fff 0 2px, transparent 3px),
-        radial-gradient(circle at 70% 20%, #fff 0 2px, transparent 3px),
-        radial-gradient(circle at 60% 70%, #fff 0 2px, transparent 3px),
-        radial-gradient(circle at 30% 80%, #fff 0 2px, transparent 3px);
-      background-size: 240px 240px;
-      animation: drift 18s linear infinite;
-      filter: blur(.2px);
+
+    /* Cute "Snoopy-ish" original doodle stickers (NOT official art) */
+    .doodles{
+      position:fixed; inset:0; pointer-events:none; opacity:.9;
     }
-    @keyframes drift { to { transform: translateY(120px); } }
+    .sticker{
+      position:absolute; width:160px; height:160px;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.10));
+      opacity:.6;
+      transform: rotate(var(--r));
+    }
+    .sticker.small{ width:120px; height:120px; opacity:.5;}
+    .sticker.tiny{ width:90px; height:90px; opacity:.45;}
 
     .card{
-      width:min(92vw, 520px);
+      width:min(92vw, 560px);
       background:var(--card);
       border:1px solid #ffffff80;
       backdrop-filter: blur(10px);
-      border-radius:24px;
+      border-radius:26px;
       padding:28px 22px;
       box-shadow: 0 18px 60px rgba(0,0,0,.18);
       text-align:center;
       position:relative;
     }
-    h1{margin:0 0 8px; font-size:clamp(28px, 4vw, 40px)}
-    p{margin:0 0 18px; font-size:clamp(15px, 2.2vw, 18px); line-height:1.35}
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(28px, 4vw, 42px);
+      letter-spacing:.2px;
+    }
+    p{
+      margin:0 0 14px;
+      font-size:clamp(15px, 2.2vw, 18px);
+      line-height:1.35;
+    }
+
+    .speech{
+      margin:14px auto 8px;
+      width:min(520px, 100%);
+      background:#fff;
+      border:2px solid #111;
+      border-radius:18px;
+      padding:12px 14px;
+      position:relative;
+      text-align:left;
+      font-weight:600;
+    }
+    .speech:after{
+      content:"";
+      position:absolute;
+      left:34px; bottom:-14px;
+      width:0; height:0;
+      border:14px solid transparent;
+      border-top-color:#111;
+      filter: drop-shadow(0 3px 0 rgba(0,0,0,.05));
+    }
+    .speech:before{
+      content:"";
+      position:absolute;
+      left:36px; bottom:-11px;
+      width:0; height:0;
+      border:12px solid transparent;
+      border-top-color:#fff;
+      z-index:1;
+    }
 
     .btns{
       display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
       margin-top:14px;
+      align-items:center;
     }
     button{
       border:0; border-radius:999px; padding:12px 18px;
-      font-weight:700; font-size:16px; cursor:pointer;
-      transition: transform .08s ease, box-shadow .2s ease, opacity .2s ease;
+      font-weight:800; font-size:16px; cursor:pointer;
+      transition: transform .08s ease, box-shadow .2s ease, opacity .2s ease, width .2s ease, height .2s ease;
       box-shadow: 0 10px 22px rgba(0,0,0,.12);
+      transform: scale(1);
+      user-select:none;
+      touch-action: manipulation;
     }
     button:active{transform: scale(.98)}
     #yes{background:var(--yes); color:white}
     #no{background:var(--no); color:white; position:relative}
-    .hidden{display:none}
 
     .result{
       margin-top:18px;
@@ -64,52 +108,101 @@
       background:#ffffffb8;
       border-radius:18px;
       border:1px solid #ffffff90;
+      display:none;
     }
-    .emoji{font-size:34px}
+    .result.show{display:block}
 
-    /* confetti-ish hearts */
+    .emoji{font-size:36px}
+
+    /* floating hearts */
     .pop{
       position:fixed; left:50%; top:50%;
       font-size:18px; transform: translate(-50%,-50%);
-      animation: pop 1200ms ease-out forwards;
+      animation: pop 1100ms ease-out forwards;
       pointer-events:none;
       filter: drop-shadow(0 8px 10px rgba(0,0,0,.18));
     }
     @keyframes pop{
       0%{opacity:0; transform:translate(-50%,-50%) scale(.8)}
       15%{opacity:1}
-      100%{opacity:0; transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.4)}
+      100%{opacity:0; transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.35)}
     }
 
-    footer{
-      margin-top:16px; font-size:12px; opacity:.75
+    footer{margin-top:14px; font-size:12px; opacity:.75}
+
+    /* mobile-friendly: keep no button from going off-screen visually */
+    .screen-safe{
+      max-width: calc(100vw - 24px);
+      max-height: calc(100vh - 24px);
     }
-    a{color:inherit}
   </style>
 </head>
 <body>
-  <div class="hearts"></div>
 
-  <main class="card">
+  <!-- ORIGINAL doodle SVG stickers (cute beagle + little bird vibe) -->
+  <div class="doodles">
+    <!-- Top-left -->
+    <svg class="sticker small" style="left:14px; top:18px; --r:-10deg" viewBox="0 0 200 200" aria-hidden="true">
+      <!-- bird -->
+      <ellipse cx="55" cy="70" rx="24" ry="20" fill="#ffd44d" stroke="#111" stroke-width="4"/>
+      <circle cx="45" cy="66" r="4" fill="#111"/>
+      <path d="M70 72 L86 66 L70 60" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M44 90 Q56 102 72 92" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <!-- hearts -->
+      <text x="108" y="62" font-size="26">💗</text>
+      <text x="130" y="92" font-size="22">💖</text>
+    </svg>
+
+    <!-- Bottom-right beagle-ish -->
+    <svg class="sticker" style="right:10px; bottom:12px; --r:8deg" viewBox="0 0 200 200" aria-hidden="true">
+      <!-- head -->
+      <ellipse cx="105" cy="105" rx="62" ry="52" fill="#fff" stroke="#111" stroke-width="5"/>
+      <!-- ear -->
+      <path d="M58 98 Q30 112 46 146 Q66 168 76 140 Q84 120 70 106" fill="#111"/>
+      <!-- nose -->
+      <ellipse cx="132" cy="118" rx="10" ry="8" fill="#111"/>
+      <!-- eye -->
+      <circle cx="118" cy="98" r="5" fill="#111"/>
+      <!-- blush -->
+      <circle cx="145" cy="132" r="7" fill="#ff9bb0" opacity=".8"/>
+      <!-- mouth -->
+      <path d="M128 126 Q120 136 110 130" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <!-- collar -->
+      <path d="M70 150 Q105 170 142 150" fill="none" stroke="#ff2e63" stroke-width="8" stroke-linecap="round"/>
+      <text x="90" y="58" font-size="26">💘</text>
+    </svg>
+
+    <!-- Mid-right tiny -->
+    <svg class="sticker tiny" style="right:34px; top:120px; --r:14deg" viewBox="0 0 200 200" aria-hidden="true">
+      <path d="M52 110 Q68 80 88 104 Q104 76 122 106 Q140 140 104 150 Q70 146 52 110Z" fill="#fff" stroke="#111" stroke-width="5" />
+      <text x="78" y="125" font-size="26">💗</text>
+    </svg>
+  </div>
+
+  <main class="card screen-safe">
     <div class="emoji">💘</div>
     <h1>Will you be my Valentine?</h1>
-    <p>There’s a correct answer. Choose wisely 😌</p>
+    <p>Choose carefully. One option is clearly… safer 😌</p>
+
+    <div class="speech" id="speech">
+      <span id="speechText">A tiny bird told me you should press “Yes.”</span>
+    </div>
 
     <div class="btns">
       <button id="yes">Yes 💗</button>
       <button id="no">No 🙃</button>
     </div>
 
-    <section id="result" class="result hidden">
-      <h2 style="margin:0 0 6px;">YAYYYYY 🥹💕</h2>
-      <p id="msg" style="margin:0 0 10px;">
-        You just made my whole day. Dinner on me + unlimited forehead kisses.
+    <section id="result" class="result">
+      <h2 style="margin:0 0 6px;">WOOOO! 🥹💞</h2>
+      <p style="margin:0 0 10px;">
+        Congrats. You just unlocked: snacks, cuddles, and me being annoyingly happy all day.
       </p>
-      <p style="margin:0;">💐🍫🎬</p>
+      <p style="margin:0;">🍫💐🎬</p>
     </section>
 
     <footer>
-      Made with ❤️ on <span id="today"></span>
+      made with chaos + love • <span id="today"></span>
     </footer>
   </main>
 
@@ -118,10 +211,28 @@
     const noBtn  = document.getElementById('no');
     const result = document.getElementById('result');
     const today  = document.getElementById('today');
+    const speechText = document.getElementById('speechText');
 
     today.textContent = new Date().toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
 
-    function heartPop(count=14){
+    const noLines = [
+      "Nice try 😭",
+      "You’re really clicking “No”??",
+      "This is getting embarrassing for you.",
+      "Stop. I’m sensitive.",
+      "Okay… now it’s personal.",
+      "I’m calling the tiny bird. 🐦",
+      "The beagle says: choose YES.",
+      "Last warning 😤",
+      "You can’t outrun love 💘",
+      "At this point… just say yes 😂"
+    ];
+
+    let attempts = 0;
+    let yesScale = 1;
+    let noScale  = 1;
+
+    function heartPop(count=12){
       for(let i=0;i<count;i++){
         const s = document.createElement('div');
         s.className = 'pop';
@@ -132,38 +243,97 @@
         s.style.setProperty('--y', y);
         s.style.fontSize = (14 + Math.random()*18).toFixed(0) + 'px';
         document.body.appendChild(s);
-        setTimeout(()=>s.remove(), 1300);
+        setTimeout(()=>s.remove(), 1200);
       }
     }
 
-    yesBtn.addEventListener('click', () => {
-      result.classList.remove('hidden');
-      heartPop(20);
-      yesBtn.disabled = true;
-      noBtn.disabled  = true;
-      yesBtn.style.opacity = .8;
-      noBtn.style.opacity  = .6;
-    });
+    function moveNoButton(){
+      const pad = 14;
 
-    // playful "no" button dodge
-    noBtn.addEventListener('mouseenter', () => {
-      const pad = 12;
-      const maxX = window.innerWidth  - noBtn.offsetWidth  - pad;
-      const maxY = window.innerHeight - noBtn.offsetHeight - pad;
+      // if it's not fixed yet, make it fixed so it can run away anywhere
+      noBtn.style.position = 'fixed';
+
+      const w = noBtn.offsetWidth;
+      const h = noBtn.offsetHeight;
+
+      const maxX = window.innerWidth  - w - pad;
+      const maxY = window.innerHeight - h - pad;
 
       const x = Math.max(pad, Math.min(maxX, Math.random()*maxX));
       const y = Math.max(pad, Math.min(maxY, Math.random()*maxY));
 
-      noBtn.style.position = 'fixed';
       noBtn.style.left = x + 'px';
       noBtn.style.top  = y + 'px';
+    }
+
+    function updateScales(){
+      // Make Yes bigger, No smaller
+      yesScale = Math.min(2.2, 1 + attempts * 0.12);
+      noScale  = Math.max(0.45, 1 - attempts * 0.08);
+
+      yesBtn.style.transform = `scale(${yesScale})`;
+      noBtn.style.transform  = `scale(${noScale})`;
+
+      // Make No text shorter as it shrinks (optional vibe)
+      if (attempts >= 5) noBtn.textContent = "No 😅";
+      if (attempts >= 8) noBtn.textContent = "no…";
+    }
+
+    function onNoAttempt(){
+      attempts++;
+
+      // update speech line
+      speechText.textContent = noLines[Math.min(noLines.length - 1, attempts - 1)];
+
+      // scale buttons
+      updateScales();
+
+      // move the No button
+      moveNoButton();
+
+      // sprinkle hearts
+      heartPop(6);
+
+      // if they keep trying, start gently “forcing” yes by making it huge
+      if (attempts >= 10){
+        speechText.textContent = "Okay you win. The only choice left is YES 😌💗";
+      }
+    }
+
+    // YES click
+    yesBtn.addEventListener('click', () => {
+      result.classList.add('show');
+      heartPop(18);
+
+      // lock buttons
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
+      yesBtn.style.opacity = .85;
+      noBtn.style.opacity  = .55;
+
+      // bring No button back near card so it doesn't stay in a random spot
+      noBtn.style.position = 'relative';
+      noBtn.style.left = '';
+      noBtn.style.top  = '';
+      noBtn.style.transform = 'scale(0.7)';
+      speechText.textContent = "The tiny bird is proud of you. 🐦💘";
     });
 
-    // on mobile, tap to move
+    // “No” runs away when hovered (desktop) or focused
+    noBtn.addEventListener('mouseenter', onNoAttempt);
+
+    // mobile taps
     noBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      heartPop(6);
-      noBtn.dispatchEvent(new Event('mouseenter'));
+      onNoAttempt();
+    });
+
+    // accessibility: keyboard focus attempt
+    noBtn.addEventListener('focus', onNoAttempt);
+
+    // if window resizes, keep No on-screen
+    window.addEventListener('resize', () => {
+      if (noBtn.style.position === 'fixed') moveNoButton();
     });
   </script>
 </body>
