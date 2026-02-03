@@ -59,20 +59,35 @@
       border-radius:18px;
       background:#fff0f4;
       position:relative;
-      overflow:hidden;          /* HARD CLIP for gif + no button */
+      overflow:hidden;          /* HARD CLIP */
       isolation:isolate;
     }
 
-    /* GIF layer (behind buttons OR above visually—either works; this stays behind) */
+    /* GIF stage is clipped + also fades toward edges via mask */
     .gifStage{
       position:absolute;
       inset:0;
       z-index:0;
       pointer-events:none;
-      opacity:.55;
+      opacity:.9; /* overall intensity; individual sprites also fade in */
+
       overflow:hidden;
       border-radius:18px;
+
+      /* Hard clip even for weird GIF padding / browser quirks */
       clip-path: inset(0 round 18px);
+
+      /* Fade toward edges (so it "lives" in the center behind YES) */
+      -webkit-mask-image: radial-gradient(circle at 50% 50%,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) 45%,
+        rgba(0,0,0,.6) 65%,
+        rgba(0,0,0,.0) 85%);
+      mask-image: radial-gradient(circle at 50% 50%,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) 45%,
+        rgba(0,0,0,.6) 65%,
+        rgba(0,0,0,.0) 85%);
     }
 
     .gifSprite{
@@ -84,10 +99,10 @@
       user-select:none;
       -webkit-user-drag:none;
 
-      opacity:0;                /* start invisible */
-      transition: opacity 420ms ease; /* fade in */
+      opacity:0;                /* fade in */
+      transition: opacity 420ms ease;
     }
-    .gifSprite.show{ opacity:1; }
+    .gifSprite.show{ opacity:.65; }
 
     button{
       border:0;
@@ -345,12 +360,33 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- BOUNCING GIF ENGINE (STRICTLY INSIDE PLAYGROUND) ----------
+    // ---------- BOUNCING GIF ENGINE ----------
+    // Constrained *inside* the playground.
+    // Additionally: movement is constrained to a CENTER "safe rectangle" so nothing ever looks like it leaks.
+
     let running = true;
     let rafId = null;
-    const sprites = []; // { el, x, y, vx, vy, w, h }
+    const sprites = []; // { el, x, y, vx, vy, w, h, minX, maxX, minY, maxY }
 
     function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function getCenterBounds(w, h){
+      // define a central rectangle inside the playground to keep gifs "behind YES"
+      const W = playground.clientWidth;
+      const H = playground.clientHeight;
+
+      // margins from edges (tweak if you want more/less center confinement)
+      const marginX = Math.max(16, Math.round(W * 0.18));
+      const marginY = Math.max(16, Math.round(H * 0.18));
+
+      const minX = marginX;
+      const maxX = Math.max(minX, W - marginX - w);
+
+      const minY = marginY;
+      const maxY = Math.max(minY, H - marginY - h);
+
+      return { minX, maxX, minY, maxY };
+    }
 
     function spawnBouncingGif(){
       if (!running) return;
@@ -362,32 +398,31 @@
       img.className = 'gifSprite';
       img.alt = '';
 
-      // cache-bust starts the gif immediately (still loops forever)
+      // cache-bust to ensure it starts animating immediately (still loops)
       img.src = src + "?v=" + Date.now();
 
       gifStage.appendChild(img);
 
-      // Use LOCAL bounds (same coordinate system as translate)
-      const W = playground.clientWidth;
-      const H = playground.clientHeight;
-
-      // MUST match CSS gifSprite width/height for exact clamping
+      // Sprite size must match CSS for perfect clamping
       const w = 140;
       const h = 100;
 
-      // Spawn FULLY inside playground (never outside)
+      const b = getCenterBounds(w, h);
+
       const sprite = {
         el: img,
         w, h,
-        x: rand(0, Math.max(1, W - w)),
-        y: rand(0, Math.max(1, H - h)),
+        minX: b.minX, maxX: b.maxX,
+        minY: b.minY, maxY: b.maxY,
+        x: rand(b.minX, b.maxX),
+        y: rand(b.minY, b.maxY),
         vx: rand(1.8, 3.6) * (Math.random() < 0.5 ? -1 : 1),
         vy: rand(1.6, 3.2) * (Math.random() < 0.5 ? -1 : 1),
       };
 
       sprites.push(sprite);
 
-      // Place immediately, then fade in
+      // Place immediately, then fade in (centered feel)
       img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
       requestAnimationFrame(() => img.classList.add('show'));
 
@@ -400,20 +435,22 @@
         return;
       }
 
-      const W = playground.clientWidth;
-      const H = playground.clientHeight;
-
+      // Update bounds each frame in case playground grows
       for (const s of sprites){
         if (!s.el.isConnected) continue;
+
+        const b = getCenterBounds(s.w, s.h);
+        s.minX = b.minX; s.maxX = b.maxX;
+        s.minY = b.minY; s.maxY = b.maxY;
 
         s.x += s.vx;
         s.y += s.vy;
 
-        // Bounce ONLY on playground walls
-        if (s.x <= 0){ s.x = 0; s.vx *= -1; }
-        if (s.y <= 0){ s.y = 0; s.vy *= -1; }
-        if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
-        if (s.y + s.h >= H){ s.y = Math.max(0, H - s.h); s.vy *= -1; }
+        // Bounce ONLY inside the CENTER bounds (not full playground edges)
+        if (s.x <= s.minX){ s.x = s.minX; s.vx *= -1; }
+        if (s.y <= s.minY){ s.y = s.minY; s.vy *= -1; }
+        if (s.x >= s.maxX){ s.x = s.maxX; s.vx *= -1; }
+        if (s.y >= s.maxY){ s.y = s.maxY; s.vy *= -1; }
 
         s.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
       }
@@ -453,13 +490,11 @@
       heartPop(6);
       positionYes();
 
-      // Spawn one unique looping GIF that bounces inside the playground, fades in
+      // Spawn one unique looping GIF that stays centered and fades in
       spawnBouncingGif();
 
-      // Move NO after click
       setTimeout(placeNoAnywhereSafe, 30);
 
-      // After 10th NO press: NO disappears
       if (noClicks === 10){
         speechText.textContent = "Okay enough 😭";
         hideNoOnly();
@@ -473,8 +508,9 @@
     window.addEventListener('resize', () => {
       positionYes();
       if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
-      // sprites adapt automatically because tick reads clientWidth/Height every frame
+      // sprite bounds auto-update each frame
     });
   </script>
 </body>
 </html>
+
