@@ -1,256 +1,482 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Valentine? 💘</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine? 💘</title>
+  <style>
+    :root{
+      --bg1:#ffe3ea; --bg2:#ffb3c1;
+      --card:#ffffff;
+      --text:#1f1f1f;
+      --yes:#ff2e63; --no:#343a40;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+      color:var(--text);
+    }
 
-<style>
-:root{
-  --bg1:#ffe3ea; --bg2:#ffb3c1;
-  --card:#ffffff;
-  --text:#1f1f1f;
-  --yes:#ff2e63; --no:#343a40;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  min-height:100vh;
-  display:grid;
-  place-items:center;
-  font-family:system-ui, sans-serif;
-  background: radial-gradient(circle at top, var(--bg1), var(--bg2));
-}
+    .card{
+      width:min(92vw, 640px);
+      background:var(--card);
+      border-radius:26px;
+      padding:26px 22px 18px;
+      box-shadow:0 18px 60px rgba(0,0,0,.18);
+      position:relative;
+      overflow:hidden;
+      text-align:center;
+    }
 
-.card{
-  width:min(92vw, 640px);
-  background:var(--card);
-  border-radius:26px;
-  padding:24px;
-  box-shadow:0 18px 60px rgba(0,0,0,.18);
-  text-align:center;
-}
+    .textzone{
+      position:relative;
+      z-index:10;
+    }
+    h1{margin:0 0 10px;font-size:clamp(28px,4vw,42px)}
+    p{margin:0 0 12px;font-size:clamp(15px,2.2vw,18px); line-height:1.3}
 
-.textzone{ position:relative; z-index:10; }
-h1{margin:0 0 8px}
-p{margin:0}
+    .speech{
+      background:#fff;
+      border:2px solid #111;
+      border-radius:18px;
+      padding:12px 14px;
+      font-weight:650;
+      margin:14px 0 0;
+      text-align:left;
+    }
 
-.speech{
-  margin-top:14px;
-  padding:12px;
-  border-radius:18px;
-  border:2px solid #111;
-  font-weight:600;
-  background:#fff;
-}
+    .playgroundWrap{ margin-top:18px; }
+    .playground{
+      width:100%;
+      min-height:260px;
+      border-radius:18px;
+      background:#fff0f4;
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+    }
 
-/* ---------- PLAYGROUND ---------- */
-.playground{
-  margin-top:18px;
-  width:100%;
-  min-height:260px;
-  background:#fff0f4;
-  border-radius:18px;
-  position:relative;
-  overflow:hidden;
-}
+    /* GIF stage: clipped + fades at edges (center emphasis) */
+    .gifStage{
+      position:absolute;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      overflow:hidden;
+      border-radius:18px;
+      clip-path: inset(0 round 18px);
 
-/* GIF LAYER */
-.gifStage{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  overflow:hidden;
-  border-radius:18px;
-  clip-path: inset(0 round 18px);
-  z-index:0;
-}
+      /* edge fade */
+      -webkit-mask-image: radial-gradient(circle at 50% 50%,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) 45%,
+        rgba(0,0,0,.55) 68%,
+        rgba(0,0,0,0) 88%);
+      mask-image: radial-gradient(circle at 50% 50%,
+        rgba(0,0,0,1) 0%,
+        rgba(0,0,0,1) 45%,
+        rgba(0,0,0,.55) 68%,
+        rgba(0,0,0,0) 88%);
+      opacity:.9; /* overall intensity */
+    }
 
-/* GIFS (scaled visually only) */
-.gifSprite{
-  position:absolute;
-  --gif-scale: 0.6;
-  opacity:0;
-  transition: opacity 400ms ease;
-  will-change: transform;
-  user-select:none;
-  -webkit-user-drag:none;
-}
-.gifSprite.show{ opacity:.65; }
+    /* IMPORTANT: do NOT resize gifs. We keep their natural size. */
+    .gifSprite{
+      position:absolute;
+      left:0;
+      top:0;
+      will-change: transform;
+      user-select:none;
+      -webkit-user-drag:none;
 
-/* BUTTONS */
-button{
-  position:absolute;
-  border:none;
-  border-radius:999px;
-  padding:12px 18px;
-  font-weight:800;
-  cursor:pointer;
-  box-shadow:0 10px 22px rgba(0,0,0,.12);
-  z-index:5;
-}
-#yes{
-  background:var(--yes);
-  color:#fff;
-  left:50%;
-  top:22px;
-  transform:translateX(-50%);
-}
-#no{
-  background:var(--no);
-  color:#fff;
-  left:50%;
-  top:120px;
-  transform:translateX(-50%);
-}
+      opacity:0;
+      transition: opacity 420ms ease;
+    }
+    .gifSprite.show{ opacity:.65; }
 
-.result{
-  display:none;
-  margin-top:14px;
-  padding:12px;
-  border-radius:18px;
-  background:#fff0f4;
-  font-weight:600;
-}
-.result.show{display:block}
-</style>
+    button{
+      border:0;
+      border-radius:999px;
+      padding:12px 18px;
+      font-weight:800;
+      font-size:16px;
+      cursor:pointer;
+      box-shadow:0 10px 22px rgba(0,0,0,.12);
+      user-select:none;
+      touch-action: manipulation;
+      position:absolute;
+      white-space:nowrap;
+      transition: transform .15s ease, opacity .15s ease;
+      z-index:5;
+    }
+
+    #yes{
+      background:var(--yes);
+      color:white;
+      left:50%;
+      top:22px;
+      transform:translateX(-50%) scale(1);
+      transform-origin:center center;
+      z-index:5;
+    }
+
+    #no{
+      background:var(--no);
+      color:white;
+      left:50%;
+      top:125px;
+      transform:translateX(-50%);
+      z-index:6;
+    }
+
+    .result{
+      display:none;
+      margin-top:14px;
+      padding:14px;
+      background:#fff0f4;
+      border-radius:18px;
+      font-weight:600;
+      position:relative;
+      z-index:10;
+    }
+    .result.show{display:block}
+
+    footer{
+      margin-top:12px;
+      font-size:12px;
+      opacity:.7;
+      position:relative;
+      z-index:10;
+    }
+
+    .pop{
+      position:absolute;
+      left:50%;
+      top:50%;
+      font-size:18px;
+      animation:pop 900ms ease-out forwards;
+      pointer-events:none;
+      z-index:7;
+    }
+    @keyframes pop{
+      to{
+        opacity:0;
+        transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1.4);
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="card">
-  <div class="textzone">
-    <h1>Will you be my Valentine? 💘</h1>
-    <p>Careful with that “No”…</p>
-    <div class="speech" id="speechText">Just press Yes.</div>
-  </div>
+  <main class="card">
+    <div class="textzone">
+      <h1>Will you be my Valentine? 💘</h1>
+      <p>Careful with that “No”…</p>
 
-  <div class="playground" id="playground">
-    <div class="gifStage" id="gifStage"></div>
-    <button id="yes">Yes 💗</button>
-    <button id="no">No 🙃</button>
-  </div>
+      <div class="speech">
+        <span id="speechText">Just press Yes, we both know it.</span>
+      </div>
+    </div>
 
-  <div class="result" id="result">Correct choice 🥹💞</div>
-</div>
+    <div class="playgroundWrap">
+      <div class="playground" id="playground">
+        <div class="gifStage" id="gifStage" aria-hidden="true"></div>
+        <button id="yes">Yes 💗</button>
+        <button id="no">No 🙃</button>
+      </div>
+    </div>
 
-<script>
-const playground = document.getElementById("playground");
-const gifStage = document.getElementById("gifStage");
-const yesBtn = document.getElementById("yes");
-const noBtn = document.getElementById("no");
-const speechText = document.getElementById("speechText");
-const result = document.getElementById("result");
+    <section id="result" class="result">
+      Correct choice 🥹💞<br/>
+      Snacks, cuddles, and happiness unlocked.
+    </section>
 
-/* ---------- GIF SET ---------- */
-const gifPool = [
-  "snoopy1.gif",
-  "snoopy2.gif",
-  "snoopy3.gif",
-  "snoopy4.gif",
-  "snoopy5.gif",
-  "snoopy6.gif",
-  "snoopy7.gif",
-  "snoopy8.gif",
-  "snoopy9.gif"
-];
+    <footer>made with chaos + love</footer>
+  </main>
 
-function shuffle(a){
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-let gifQueue = shuffle([...gifPool]);
-let gifIndex = 0;
+  <script>
+    const yesBtn = document.getElementById('yes');
+    const noBtn  = document.getElementById('no');
+    const speechText = document.getElementById('speechText');
+    const result = document.getElementById('result');
+    const playground = document.getElementById('playground');
+    const gifStage = document.getElementById('gifStage');
 
-/* ---------- GIF ENGINE ---------- */
-let sprites = [];
-let rafId = null;
-let running = true;
-const SCALE = 0.6;
+    const gifPool = [
+      "snoopy1.gif",
+      "snoopy2.gif",
+      "snoopy3.gif",
+      "snoopy4.gif",
+      "snoopy5.gif",
+      "snoopy6.gif",
+      "snoopy7.gif",
+      "snoopy8.gif",
+      "snoopy9.gif"
+    ];
 
-function spawnGif(){
-  if(!running || gifIndex >= gifQueue.length) return;
+    function shuffle(arr){
+      for (let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    let gifQueue = shuffle([...gifPool]);
+    let gifIndex = 0;
+    function nextUniqueGif(){
+      if (gifIndex >= gifQueue.length) return null;
+      return gifQueue[gifIndex++];
+    }
 
-  const img = document.createElement("img");
-  img.className = "gifSprite";
-  img.src = gifQueue[gifIndex++] + "?v=" + Date.now();
-  gifStage.appendChild(img);
+    const noLines = [
+      "Ouch. One 😭",
+      "Two??",
+      "Three. Bold.",
+      "Four. Wow.",
+      "Five. Personal now.",
+      "Six. Stop 😭",
+      "Seven. Please.",
+      "Eight. I’m fragile.",
+      "Nine. Last chance.",
+      "Okay enough 😭"
+    ];
 
-  img.onload = () => {
-    const W = playground.clientWidth;
-    const H = playground.clientHeight;
+    let noClicks = 0;
+    let yesCenteredInPlayground = false;
 
-    const w = img.naturalWidth * SCALE;
-    const h = img.naturalHeight * SCALE;
+    function heartPop(count=6){
+      for(let i=0;i<count;i++){
+        const h = document.createElement('div');
+        h.className = 'pop';
+        h.textContent = Math.random() > .5 ? '💖' : '💗';
+        h.style.setProperty('--x', `${Math.random()*160 - 80}px`);
+        h.style.setProperty('--y', `${Math.random()*120 - 60}px`);
+        playground.appendChild(h);
+        setTimeout(()=>h.remove(),900);
+      }
+    }
 
-    let x = (W - w)/2;
-    let y = (H - h)/2;
+    function getYesScale(){
+      return Math.min(3.2, 1 + noClicks * 0.16);
+    }
+    function ensurePlaygroundFits(scale){
+      const scaledYesH = yesBtn.offsetHeight * scale;
+      const minH = Math.ceil(Math.max(260, scaledYesH + 160));
+      const currentMinH = parseFloat(getComputedStyle(playground).minHeight) || 260;
+      playground.style.minHeight = `${Math.max(currentMinH, minH)}px`;
+    }
+    function positionYes(){
+      const scale = getYesScale();
+      ensurePlaygroundFits(scale);
 
-    const sprite = {
-      el: img,
-      x, y, w, h,
-      vx:(Math.random()*2+1.5)*(Math.random()<.5?-1:1),
-      vy:(Math.random()*2+1.5)*(Math.random()<.5?-1:1)
-    };
+      if (!yesCenteredInPlayground){
+        yesBtn.style.left = '50%';
+        yesBtn.style.top  = '22px';
+        yesBtn.style.transform = `translateX(-50%) scale(${scale})`;
+      } else {
+        yesBtn.style.left = '50%';
+        yesBtn.style.top  = '50%';
+        yesBtn.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      }
+    }
 
-    sprites.push(sprite);
-    img.style.transform = `translate(${x}px,${y}px) scale(${SCALE})`;
-    requestAnimationFrame(()=>img.classList.add("show"));
+    function overlaps(ax, ay, aw, ah, bx, by, bw, bh){
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
 
-    if(!rafId) rafId=requestAnimationFrame(tick);
-  };
-}
+    function placeNoAnywhereSafe(){
+      const pad = 12;
+      const areaRect = playground.getBoundingClientRect();
+      const noRect = noBtn.getBoundingClientRect();
+      const yesRect = yesBtn.getBoundingClientRect();
 
-function tick(){
-  if(!running) return;
-  const W = playground.clientWidth;
-  const H = playground.clientHeight;
+      const noW = noRect.width, noH = noRect.height;
+      const maxX = Math.max(pad, areaRect.width  - noW - pad);
+      const maxY = Math.max(pad, areaRect.height - noH - pad);
 
-  sprites.forEach(s=>{
-    s.x += s.vx;
-    s.y += s.vy;
+      const yesLocalX = yesRect.left - areaRect.left;
+      const yesLocalY = yesRect.top  - areaRect.top;
+      const yesLocalW = yesRect.width;
+      const yesLocalH = yesRect.height;
 
-    if(s.x<=0 || s.x+s.w>=W) s.vx*=-1;
-    if(s.y<=0 || s.y+s.h>=H) s.vy*=-1;
+      const cushion = 14;
 
-    s.el.style.transform =
-      `translate(${s.x}px,${s.y}px) scale(${SCALE})`;
-  });
+      for(let i=0;i<160;i++){
+        const x = pad + Math.random() * (maxX - pad);
+        const y = pad + Math.random() * (maxY - pad);
 
-  rafId=requestAnimationFrame(tick);
-}
+        if (!overlaps(
+          x, y, noW, noH,
+          yesLocalX - cushion, yesLocalY - cushion,
+          yesLocalW + cushion*2, yesLocalH + cushion*2
+        )){
+          noBtn.style.left = `${x}px`;
+          noBtn.style.top  = `${y}px`;
+          noBtn.style.transform = `none`;
+          return;
+        }
+      }
 
-function stopGifs(){
-  running=false;
-  cancelAnimationFrame(rafId);
-  gifStage.innerHTML="";
-  sprites=[];
-}
+      noBtn.style.left = `${pad}px`;
+      noBtn.style.top  = `${Math.max(pad, maxY)}px`;
+      noBtn.style.transform = `none`;
+    }
 
-/* ---------- NO LOGIC ---------- */
-const noLines=[
-  "Ouch 😭","Really?","Again??","Bold.","Stop.","Please.","Last chance.","No mercy.","Okay…","Enough 😭"
-];
-let noClicks=0;
+    function hideBothButtons(){
+      yesBtn.style.opacity = '0';
+      noBtn.style.opacity = '0';
+      setTimeout(() => {
+        yesBtn.style.display = 'none';
+        noBtn.style.display = 'none';
+      }, 160);
+    }
 
-noBtn.onclick=()=>{
-  if(noClicks>=10) return;
-  speechText.textContent=noLines[noClicks++];
-  spawnGif();
-  if(noClicks===10) noBtn.style.display="none";
-};
+    function hideNoOnly(){
+      noBtn.disabled = true;
+      noBtn.style.opacity = '0';
+      setTimeout(() => { noBtn.style.display = 'none'; }, 160);
+    }
 
-/* ---------- YES ---------- */
-yesBtn.onclick=()=>{
-  speechText.textContent="Correct choice 😌💘";
-  result.classList.add("show");
-  stopGifs();
-  yesBtn.style.display=noBtn.style.display="none";
-};
-</script>
+    // ---------- GIF BOUNCE (inside playground, natural gif size, spawn centered) ----------
+    let running = true;
+    let rafId = null;
+    const sprites = []; // { el, x, y, vx, vy, w, h }
 
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function spawnBouncingGif(){
+      if (!running) return;
+
+      const src = nextUniqueGif();
+      if (!src) return;
+
+      const img = document.createElement('img');
+      img.className = 'gifSprite';
+      img.alt = '';
+
+      // cache-bust to guarantee it starts animating immediately (still loops)
+      img.src = src + "?v=" + Date.now();
+
+      gifStage.appendChild(img);
+
+      // wait for natural size so we don't resize
+      img.addEventListener('load', () => {
+        const W = playground.clientWidth;
+        const H = playground.clientHeight;
+
+        // natural rendered size (no resizing)
+        const w = img.naturalWidth || img.width || 120;
+        const h = img.naturalHeight || img.height || 90;
+
+        // Center spawn: place so its center aligns with playground center
+        let x = (W - w) / 2;
+        let y = (H - h) / 2;
+
+        // clamp inside walls
+        x = Math.max(0, Math.min(x, W - w));
+        y = Math.max(0, Math.min(y, H - h));
+
+        const sprite = {
+          el: img,
+          w, h,
+          x, y,
+          vx: rand(1.8, 3.6) * (Math.random() < 0.5 ? -1 : 1),
+          vy: rand(1.6, 3.2) * (Math.random() < 0.5 ? -1 : 1),
+        };
+
+        sprites.push(sprite);
+
+        img.style.transform = `translate(${sprite.x}px, ${sprite.y}px)`;
+        requestAnimationFrame(() => img.classList.add('show'));
+
+        if (!rafId) rafId = requestAnimationFrame(tick);
+      });
+    }
+
+    function tick(){
+      if (!running){
+        rafId = null;
+        return;
+      }
+
+      const W = playground.clientWidth;
+      const H = playground.clientHeight;
+
+      for (const s of sprites){
+        if (!s.el.isConnected) continue;
+
+        s.x += s.vx;
+        s.y += s.vy;
+
+        // bounce ONLY on playground walls
+        if (s.x <= 0){ s.x = 0; s.vx *= -1; }
+        if (s.y <= 0){ s.y = 0; s.vy *= -1; }
+        if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
+        if (s.y + s.h >= H){ s.y = Math.max(0, H - s.h); s.vy *= -1; }
+
+        s.el.style.transform = `translate(${s.x}px, ${s.y}px)`;
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function stopGifs(){
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+      sprites.length = 0;
+      gifStage.innerHTML = "";
+    }
+
+    // ---------- EVENTS ----------
+    yesBtn.addEventListener('click', () => {
+      speechText.textContent = "Correct choice 😌💘";
+      result.classList.add('show');
+      heartPop(14);
+
+      yesBtn.disabled = true;
+      noBtn.disabled  = true;
+
+      stopGifs();
+      hideBothButtons();
+    });
+
+    noBtn.addEventListener('click', () => {
+      if (noClicks >= 10) return;
+
+      speechText.textContent = noLines[noClicks];
+      noClicks++;
+
+      if (noClicks === 1) yesCenteredInPlayground = true;
+
+      heartPop(6);
+      positionYes();
+
+      // Spawn centered, natural-size, fade-in gif
+      spawnBouncingGif();
+
+      setTimeout(placeNoAnywhereSafe, 30);
+
+      if (noClicks === 10){
+        speechText.textContent = "Okay enough 😭";
+        hideNoOnly();
+      }
+    });
+
+    window.addEventListener('load', () => {
+      positionYes();
+    });
+
+    window.addEventListener('resize', () => {
+      positionYes();
+      if (noBtn.style.display !== 'none') placeNoAnywhereSafe();
+      // sprites adapt naturally; bounce walls update next frame
+    });
+  </script>
 </body>
 </html>
