@@ -56,7 +56,6 @@
       position:relative;
       overflow:hidden;
       isolation:isolate;
-      /* NOTE: no padding/border so arena math stays simple */
       border:0;
       padding:0;
     }
@@ -83,7 +82,8 @@
       opacity:.9;
     }
 
-    .gifSprite{
+    /* NEW: wrapper that moves (translate), image that scales */
+    .gifWrap{
       position:absolute;
       left:0;
       top:0;
@@ -93,7 +93,14 @@
       opacity:0;
       transition: opacity 420ms ease;
     }
-    .gifSprite.show{ opacity:.65; }
+    .gifWrap.show{ opacity:.65; }
+
+    .gifSprite{
+      display:block;
+      transform-origin: 0 0; /* top-left */
+      user-select:none;
+      -webkit-user-drag:none;
+    }
 
     button{
       border:0;
@@ -203,19 +210,11 @@
     const playground = document.getElementById('playground');
     const gifStage = document.getElementById('gifStage');
 
-    // scale for gifs
     const GIF_SCALE = 0.3;
 
     const gifPool = [
-      "snoopy1.gif",
-      "snoopy2.gif",
-      "snoopy3.gif",
-      "snoopy4.gif",
-      "snoopy5.gif",
-      "snoopy6.gif",
-      "snoopy7.gif",
-      "snoopy8.gif",
-      "snoopy9.gif"
+      "snoopy1.gif","snoopy2.gif","snoopy3.gif","snoopy4.gif","snoopy5.gif",
+      "snoopy6.gif","snoopy7.gif","snoopy8.gif","snoopy9.gif"
     ];
 
     function shuffle(arr){
@@ -233,15 +232,8 @@
     }
 
     const noLines = [
-      "Ouch. One 😭",
-      "Two??",
-      "Three. Bold.",
-      "Four. Wow.",
-      "Five. Personal now.",
-      "Six. Stop 😭",
-      "Seven. Please.",
-      "Eight. I’m fragile.",
-      "Nine. Last chance.",
+      "Ouch. One 😭","Two??","Three. Bold.","Four. Wow.","Five. Personal now.",
+      "Six. Stop 😭","Seven. Please.","Eight. I’m fragile.","Nine. Last chance.",
       "Okay enough 😭"
     ];
 
@@ -284,23 +276,17 @@
       }
     }
 
-    // Single, consistent arena for BOTH gifs + no button: content box coords
-    function getArena(){
-      const rect = playground.getBoundingClientRect();
-      const cs = getComputedStyle(playground);
-      const borderL = parseFloat(cs.borderLeftWidth) || 0;
-      const borderT = parseFloat(cs.borderTopWidth) || 0;
-
-      return {
-        width: playground.clientWidth,
-        height: playground.clientHeight,
-        originX: rect.left + borderL,
-        originY: rect.top  + borderT
-      };
-    }
-
     function overlaps(ax, ay, aw, ah, bx, by, bw, bh){
       return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    // SINGLE shared arena: both No button + GIFs use the same width/height + origin
+    function getArena(){
+      // Content-box coords (0,0) in the playground itself (positioning context)
+      return {
+        width: playground.clientWidth,
+        height: playground.clientHeight
+      };
     }
 
     let lastNoPos = { x: null, y: null };
@@ -309,20 +295,23 @@
       if (noBtn.style.display === 'none') return;
 
       const pad = 12;
-      const arena = getArena();
+      const { width: W, height: H } = getArena();
 
-      const noRect  = noBtn.getBoundingClientRect();
+      // Use offsets relative to playground positioning context
+      const noW = noBtn.offsetWidth;
+      const noH = noBtn.offsetHeight;
+
+      const maxX = Math.max(pad, W - noW - pad);
+      const maxY = Math.max(pad, H - noH - pad);
+
+      // Yes bounds in playground coords (offsetLeft/Top are relative to offsetParent)
       const yesRect = yesBtn.getBoundingClientRect();
-
-      const noW = noRect.width, noH = noRect.height;
-
-      const maxX = Math.max(pad, arena.width  - noW - pad);
-      const maxY = Math.max(pad, arena.height - noH - pad);
-
-      const yesX = yesRect.left - arena.originX;
-      const yesY = yesRect.top  - arena.originY;
+      const pgRect  = playground.getBoundingClientRect();
+      const yesX = yesRect.left - pgRect.left;
+      const yesY = yesRect.top  - pgRect.top;
       const yesW = yesRect.width;
       const yesH = yesRect.height;
+
       const cushion = 16;
 
       for (let i=0; i<260; i++){
@@ -367,10 +356,10 @@
       setTimeout(() => { noBtn.style.display = 'none'; }, 160);
     }
 
-    // ---------- GIF BOUNCE (vx & vy always, scaled bounds never leave arena) ----------
+    // ---------- GIF BOUNCE (aligned arena via wrapper translate + inner img scale) ----------
     let running = true;
     let rafId = null;
-    const sprites = []; // { el, x, y, vx, vy, w, h }
+    const sprites = []; // { wrap, img, x, y, vx, vy, w, h }
 
     function rand(min, max){ return Math.random() * (max - min) + min; }
     function randNonZero(minAbs, maxAbs){
@@ -384,25 +373,31 @@
       const src = nextUniqueGif();
       if (!src) return;
 
+      // wrapper moves
+      const wrap = document.createElement('div');
+      wrap.className = 'gifWrap';
+
+      // img scales
       const img = document.createElement('img');
       img.className = 'gifSprite';
       img.alt = '';
       img.src = src + "?v=" + Date.now();
+      img.style.transform = `scale(${GIF_SCALE})`;
 
-      gifStage.appendChild(img);
+      wrap.appendChild(img);
+      gifStage.appendChild(wrap);
 
       img.addEventListener('load', () => {
-        const arena = getArena();
-        const W = arena.width;
-        const H = arena.height;
+        const { width: W, height: H } = getArena();
 
         const naturalW = img.naturalWidth || 120;
         const naturalH = img.naturalHeight || 90;
 
+        // collision uses SCALED pixel dims
         const w = naturalW * GIF_SCALE;
         const h = naturalH * GIF_SCALE;
 
-        // Spawn centered in the SAME arena as the NO button
+        // spawn centered in the EXACT same arena
         let x = (W - w) / 2;
         let y = (H - h) / 2;
 
@@ -410,7 +405,7 @@
         y = Math.max(0, Math.min(y, H - h));
 
         const sprite = {
-          el: img,
+          wrap, img,
           w, h,
           x, y,
           vx: randNonZero(1.4, 3.0),
@@ -419,8 +414,8 @@
 
         sprites.push(sprite);
 
-        img.style.transform = `translate(${x}px, ${y}px) scale(${GIF_SCALE})`;
-        requestAnimationFrame(() => img.classList.add('show'));
+        wrap.style.transform = `translate(${x}px, ${y}px)`;
+        requestAnimationFrame(() => wrap.classList.add('show'));
 
         if (!rafId) rafId = requestAnimationFrame(tick);
       }, { once:true });
@@ -432,23 +427,21 @@
         return;
       }
 
-      const arena = getArena();
-      const W = arena.width;
-      const H = arena.height;
+      const { width: W, height: H } = getArena();
 
       for (const s of sprites){
-        if (!s.el.isConnected) continue;
+        if (!s.wrap.isConnected) continue;
 
         s.x += s.vx;
         s.y += s.vy;
 
-        // Bounce on the same arena walls used by the NO button
+        // bounce on the same arena walls as the NO button
         if (s.x <= 0){ s.x = 0; s.vx *= -1; }
         if (s.y <= 0){ s.y = 0; s.vy *= -1; }
         if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
         if (s.y + s.h >= H){ s.y = Math.max(0, H - s.h); s.vy *= -1; }
 
-        s.el.style.transform = `translate(${s.x}px, ${s.y}px) scale(${GIF_SCALE})`;
+        s.wrap.style.transform = `translate(${s.x}px, ${s.y}px)`;
       }
 
       rafId = requestAnimationFrame(tick);
@@ -487,6 +480,7 @@
       positionYes();
       spawnBouncingGif();
 
+      // move NO after layout updates so YES rect is accurate
       requestAnimationFrame(() => moveNoButton());
 
       if (noClicks === 10){
