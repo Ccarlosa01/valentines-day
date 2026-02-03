@@ -373,8 +373,8 @@
         const naturalH = img.naturalHeight || 90;
 
         // scaled pixel size used for collision/centering
-        const w = naturalW * GIF_SCALE;
-        const h = naturalH * GIF_SCALE;
+        const w = naturalW; // * GIF_SCALE;
+        const h = naturalH; // * GIF_SCALE;
 
         const W = playground.clientWidth;
         const H = playground.clientHeight;
