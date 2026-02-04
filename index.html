@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pepinoooo </title>
+  <title>Valentine 💘</title>
 
   <style>
     :root{
@@ -191,6 +191,7 @@
       justify-content:space-between;
       box-shadow:0 10px 22px rgba(0,0,0,.10);
       transition: transform .15s ease;
+      user-select:none;
     }
     .giftBtn:hover{ transform:scale(1.01); }
     .giftBtn span{ opacity:.7; font-weight:800; }
@@ -377,6 +378,39 @@
       color:#111;
       border:2px solid rgba(0,0,0,.15);
     }
+
+    /* ---------- OPENING FX (face.png + opening.mp3) ---------- */
+    .openFx{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      z-index:10050; /* above everything */
+      pointer-events:all;
+      background:rgba(0,0,0,.10);
+    }
+    .openFx.show{ display:grid; }
+
+    .openFx img{
+      width:min(240px, 55vw);
+      height:auto;
+      display:block;
+      opacity:0;
+      transform: scale(0) rotate(0deg);
+      filter: drop-shadow(0 18px 35px rgba(0,0,0,.25));
+    }
+
+    /* Expand 1s (0->50%), Shrink 1s (50->100%) while spinning */
+    .openFx.run img{
+      animation: openFxAnim 2s ease-in-out forwards;
+    }
+
+    @keyframes openFxAnim{
+      0%   { opacity:0; transform: scale(0)   rotate(0deg); }
+      10%  { opacity:1; }
+      50%  { opacity:1; transform: scale(1.25) rotate(360deg); }
+      100% { opacity:0; transform: scale(0)   rotate(720deg); }
+    }
   </style>
 </head>
 
@@ -412,8 +446,17 @@
   </section>
 
   <footer>~cacacacarlitosss~</footer>
-
 </main>
+
+<!-- Opening FX overlay -->
+<div class="openFx" id="openFx" aria-hidden="true">
+  <img src="face.png" alt="opening face"/>
+</div>
+
+<!-- Sound effect (must be triggered by click) -->
+<audio id="openSfx" preload="auto">
+  <source src="opening.mp3" type="audio/mpeg">
+</audio>
 
 <!-- ---------- MODALS ---------- -->
 <div class="overlay" id="overlay">
@@ -521,6 +564,11 @@
   const gift3Music = document.getElementById('gift3Music');
   const gift2Video = document.getElementById('gift2Video');
   const gift3Letter = document.getElementById('gift3Letter');
+
+  // Opening FX
+  const openFx = document.getElementById('openFx');
+  const openSfx = document.getElementById('openSfx');
+  let fxRunning = false;
 
   // ----- No Lines -----
   const noLines = [
@@ -651,8 +699,8 @@
         x:(W-w)/2,
         y:(H-h)/2,
         w,h,
-        vx:randNonZero(0.6,1.4),
-        vy:randNonZero(0.5,1.2)
+        vx:randNonZero(0.6,1.2),
+        vy:randNonZero(0.5,1.1)
       };
 
       s.x = Math.max(0, Math.min(s.x, W - s.w));
@@ -700,6 +748,33 @@
     gifStage.innerHTML="";
   }
 
+  // ----- OPENING FX (play sound + animate face.png, then open gift) -----
+  function playOpeningFxThen(openGiftFn){
+    if (fxRunning) return;
+    fxRunning = true;
+
+    // show overlay and restart animation cleanly
+    openFx.classList.add('show');
+    openFx.classList.remove('run');
+    void openFx.offsetHeight; // force reflow to reset animation
+    openFx.classList.add('run');
+
+    // play sound (should work because user clicked)
+    try{
+      openSfx.pause();
+      openSfx.currentTime = 0;
+      openSfx.play();
+    }catch(e){ /* ignore autoplay edge cases */ }
+
+    // after 2s (1s grow + 1s shrink), open the gift
+    setTimeout(() => {
+      openFx.classList.remove('run');
+      openFx.classList.remove('show');
+      fxRunning = false;
+      openGiftFn();
+    }, 2000);
+  }
+
   // ----- Modal helpers -----
   function openModal(which){
     overlay.classList.add('show');
@@ -718,7 +793,7 @@
     if (which === 2) modalGift2.style.display = 'block';
     if (which === 3){
       modalGift3.style.display = 'block';
-      // don't auto-open card; just start typing once it opens
+      // card opens on click once
     }
   }
 
@@ -748,23 +823,20 @@
     if (e.key === 'Escape') closeModal();
   });
 
-  // Gift clicks
-  gift1Btn.addEventListener('click', ()=> openModal(1));
-  gift2Btn.addEventListener('click', ()=> openModal(2));
-  gift3Btn.addEventListener('click', ()=> openModal(3));
+  // Gift clicks -> play FX then open
+  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
+  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
+  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
 
   // ----- Gift 3: open ONLY ONCE (no flip back) -----
   let cardOpenedOnce = false;
 
   function openCardOnce(){
-    if (cardOpenedOnce) return;            // prevents flipping back
+    if (cardOpenedOnce) return;
     cardOpenedOnce = true;
-
     loveCard.classList.add('open');
-    // start typing when it opens
     if (!typingState.completed) startTyping();
   }
-
   loveCard.addEventListener('click', openCardOnce);
 
   // ----- Music -----
@@ -857,10 +929,7 @@ y se van a mantener.)`;
     renderLetterText(LETTER_TEXT);
   }
 
-  typeBtn.addEventListener('click', ()=>{
-    // replay typing (even if already open)
-    startTyping();
-  });
+  typeBtn.addEventListener('click', startTyping);
   skipBtn.addEventListener('click', skipTyping);
 
   // ----- Main events -----
