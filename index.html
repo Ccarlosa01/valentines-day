@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Valentine? 💘</title>
+  <title>Valentine 💘</title>
+
   <style>
     :root{
       --bg1:#ffe3ea; --bg2:#ffb3c1;
@@ -12,6 +13,7 @@
       --yes:#ff2e63; --no:#343a40;
     }
     *{box-sizing:border-box}
+
     body{
       margin:0;
       min-height:100vh;
@@ -28,14 +30,14 @@
       border-radius:26px;
       padding:26px 22px 18px;
       box-shadow:0 18px 60px rgba(0,0,0,.18);
-      position:relative;
-      overflow:hidden;
       text-align:center;
+      overflow:hidden;
     }
 
     .textzone{ position:relative; z-index:10; }
+
     h1{margin:0 0 10px;font-size:clamp(28px,4vw,42px)}
-    p{margin:0 0 12px;font-size:clamp(15px,2.2vw,18px); line-height:1.3}
+    p{margin:0 0 12px;font-size:clamp(15px,2.2vw,18px)}
 
     .speech{
       background:#fff;
@@ -43,12 +45,12 @@
       border-radius:18px;
       padding:12px 14px;
       font-weight:650;
-      margin:14px 0 0;
+      margin-top:14px;
       text-align:left;
     }
 
-    .playgroundWrap{ margin-top:18px; }
     .playground{
+      margin-top:18px;
       width:100%;
       min-height:260px;
       border-radius:18px;
@@ -56,40 +58,24 @@
       position:relative;
       overflow:hidden;
       isolation:isolate;
-      border:0;
-      padding:0;
     }
 
     .gifStage{
       position:absolute;
       inset:0;
-      z-index:0;
       pointer-events:none;
-      overflow:hidden;
+      z-index:0;
       border-radius:18px;
-      clip-path: inset(0 round 18px);
-
-      -webkit-mask-image: radial-gradient(circle at 50% 50%,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) 45%,
-        rgba(0,0,0,.55) 68%,
-        rgba(0,0,0,0) 88%);
-      mask-image: radial-gradient(circle at 50% 50%,
-        rgba(0,0,0,1) 0%,
-        rgba(0,0,0,1) 45%,
-        rgba(0,0,0,.55) 68%,
-        rgba(0,0,0,0) 88%);
-      opacity:.9;
+      overflow:hidden;
+      opacity:.85;
     }
 
-    /* NEW: wrapper that moves (translate), image that scales */
+    /* wrapper moves, img scales */
     .gifWrap{
       position:absolute;
       left:0;
       top:0;
       will-change: transform;
-      user-select:none;
-      -webkit-user-drag:none;
       opacity:0;
       transition: opacity 420ms ease;
     }
@@ -97,12 +83,13 @@
 
     .gifSprite{
       display:block;
-      transform-origin: 0 0; /* top-left */
+      transform-origin:0 0;
       user-select:none;
       -webkit-user-drag:none;
     }
 
     button{
+      position:absolute;
       border:0;
       border-radius:999px;
       padding:12px 18px;
@@ -110,27 +97,22 @@
       font-size:16px;
       cursor:pointer;
       box-shadow:0 10px 22px rgba(0,0,0,.12);
-      user-select:none;
-      touch-action: manipulation;
-      position:absolute;
       white-space:nowrap;
-      transition: transform .15s ease, opacity .15s ease, left .15s ease, top .15s ease;
+      transition: transform .15s ease, left .15s ease, top .15s ease, opacity .15s ease;
       z-index:5;
     }
 
     #yes{
       background:var(--yes);
-      color:white;
+      color:#fff;
       left:50%;
       top:22px;
       transform:translateX(-50%) scale(1);
-      transform-origin:center center;
-      z-index:5;
     }
 
     #no{
       background:var(--no);
-      color:white;
+      color:#fff;
       left:50%;
       top:125px;
       transform:translateX(-50%);
@@ -144,17 +126,13 @@
       background:#fff0f4;
       border-radius:18px;
       font-weight:600;
-      position:relative;
-      z-index:10;
     }
-    .result.show{display:block}
+    .result.show{ display:block }
 
     footer{
       margin-top:12px;
       font-size:12px;
       opacity:.7;
-      position:relative;
-      z-index:10;
     }
 
     .pop{
@@ -174,329 +152,183 @@
     }
   </style>
 </head>
+
 <body>
 
-  <main class="card">
-    <div class="textzone">
-      <h1>Will you be my Valentine? 💘</h1>
-      <p>Careful with that “No”…</p>
+<main class="card">
 
-      <div class="speech">
-        <span id="speechText">Just press Yes, we both know it.</span>
-      </div>
+  <div class="textzone">
+    <h1>Para la futura Doctora 🩺</h1>
+    <p>Si quieres romper mi coranzoncito de pollito o por curiosidad, presiona "Ñaoooo" 😝</p>
+
+    <div class="speech">
+      <span id="speechText">selecciona....</span>
     </div>
+  </div>
 
-    <div class="playgroundWrap">
-      <div class="playground" id="playground">
-        <div class="gifStage" id="gifStage" aria-hidden="true"></div>
-        <button id="yes">Yes 💗</button>
-        <button id="no">No 🙃</button>
-      </div>
-    </div>
+  <div class="playground" id="playground">
+    <div class="gifStage" id="gifStage"></div>
+    <button id="yes">Osiiiii</button>
+    <button id="no">Ñaoooo</button>
+  </div>
 
-    <section id="result" class="result">
-      Correct choice 🥹💞<br/>
-      Snacks, cuddles, and happiness unlocked.
-    </section>
+  <section id="result" class="result">abcdefg</section>
+  <footer>~cacacacarlitosss~</footer>
 
-    <footer>made with chaos + love</footer>
-  </main>
+</main>
 
-  <script>
-    const yesBtn = document.getElementById('yes');
-    const noBtn  = document.getElementById('no');
-    const speechText = document.getElementById('speechText');
-    const result = document.getElementById('result');
-    const playground = document.getElementById('playground');
-    const gifStage = document.getElementById('gifStage');
+<script>
+const yesBtn = document.getElementById('yes');
+const noBtn  = document.getElementById('no');
+const speechText = document.getElementById('speechText');
+const result = document.getElementById('result');
+const playground = document.getElementById('playground');
+const gifStage = document.getElementById('gifStage');
 
-    const GIF_SCALE = 0.3;
+const GIF_SCALE = 0.3;
 
-    const gifPool = [
-      "snoopy1.gif","snoopy2.gif","snoopy3.gif","snoopy4.gif","snoopy5.gif",
-      "snoopy6.gif","snoopy7.gif","snoopy8.gif","snoopy9.gif"
-    ];
+const gifPool = [
+  "snoopy1.gif","snoopy2.gif","snoopy3.gif","snoopy4.gif","snoopy5.gif",
+  "snoopy6.gif","snoopy7.gif","snoopy8.gif","snoopy9.gif"
+];
 
-    function shuffle(arr){
-      for (let i = arr.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-    let gifQueue = shuffle([...gifPool]);
-    let gifIndex = 0;
-    function nextUniqueGif(){
-      if (gifIndex >= gifQueue.length) return null;
-      return gifQueue[gifIndex++];
-    }
+let gifQueue = [...gifPool].sort(() => Math.random() - .5);
+let gifIndex = 0;
 
-    const noLines = [
-      "Ouch. One 😭","Two??","Three. Bold.","Four. Wow.","Five. Personal now.",
-      "Six. Stop 😭","Seven. Please.","Eight. I’m fragile.","Nine. Last chance.",
-      "Okay enough 😭"
-    ];
+const noLines = [
+  "Hmmm obviamente fue x curiosidad",
+  "guaoooooooooo",
+  "no pense que iba hacer asi de dificil",
+  "ok ya duele un poquito 😕",
+  "pucha pero no seas mala 😣",
+  "tanto esfuerzo y enserio no quieres saber lo que te espera 👀",
+  "porfi 🥺",
+  "oseaaa me odias 🤕",
+  "que tipo de doctora causa tanto dolor 💔",
+  "OKAY YA BASTA 😭"
+];
 
-    let noClicks = 0;
-    let yesCenteredInPlayground = false;
+let noClicks = 0;
+let yesCentered = false;
 
-    function heartPop(count=6){
-      for(let i=0;i<count;i++){
-        const h = document.createElement('div');
-        h.className = 'pop';
-        h.textContent = Math.random() > .5 ? '💖' : '💗';
-        h.style.setProperty('--x', `${Math.random()*160 - 80}px`);
-        h.style.setProperty('--y', `${Math.random()*120 - 60}px`);
-        playground.appendChild(h);
-        setTimeout(()=>h.remove(),900);
-      }
-    }
+function rand(min,max){ return Math.random()*(max-min)+min }
+function randNonZero(min,max){
+  const v = rand(min,max);
+  return Math.random()<.5 ? -v : v;
+}
 
-    function getYesScale(){
-      return Math.min(3.2, 1 + noClicks * 0.16);
-    }
-    function ensurePlaygroundFits(scale){
-      const scaledYesH = yesBtn.offsetHeight * scale;
-      const minH = Math.ceil(Math.max(260, scaledYesH + 160));
-      const currentMinH = parseFloat(getComputedStyle(playground).minHeight) || 260;
-      playground.style.minHeight = `${Math.max(currentMinH, minH)}px`;
-    }
-    function positionYes(){
-      const scale = getYesScale();
-      ensurePlaygroundFits(scale);
+function heartPop(n=6){
+  for(let i=0;i<n;i++){
+    const h=document.createElement('div');
+    h.className='pop';
+    h.textContent=Math.random()>.5?'💖':'💗';
+    h.style.setProperty('--x',`${Math.random()*160-80}px`);
+    h.style.setProperty('--y',`${Math.random()*120-60}px`);
+    playground.appendChild(h);
+    setTimeout(()=>h.remove(),900);
+  }
+}
 
-      if (!yesCenteredInPlayground){
-        yesBtn.style.left = '50%';
-        yesBtn.style.top  = '22px';
-        yesBtn.style.transform = `translateX(-50%) scale(${scale})`;
-      } else {
-        yesBtn.style.left = '50%';
-        yesBtn.style.top  = '50%';
-        yesBtn.style.transform = `translate(-50%, -50%) scale(${scale})`;
-      }
-    }
+function yesScale(){
+  return Math.min(3.2,1+noClicks*.16);
+}
 
-    function overlaps(ax, ay, aw, ah, bx, by, bw, bh){
-      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-    }
+function positionYes(){
+  const s=yesScale();
+  if(!yesCentered){
+    yesBtn.style.left='50%';
+    yesBtn.style.top='22px';
+    yesBtn.style.transform=`translateX(-50%) scale(${s})`;
+  }else{
+    yesBtn.style.left='50%';
+    yesBtn.style.top='50%';
+    yesBtn.style.transform=`translate(-50%,-50%) scale(${s})`;
+  }
+}
 
-    // SINGLE shared arena: both No button + GIFs use the same width/height + origin
-    function getArena(){
-      // Content-box coords (0,0) in the playground itself (positioning context)
-      return {
-        width: playground.clientWidth,
-        height: playground.clientHeight
-      };
-    }
+function moveNo(){
+  const pad=12;
+  const W=playground.clientWidth;
+  const H=playground.clientHeight;
+  const nw=noBtn.offsetWidth;
+  const nh=noBtn.offsetHeight;
 
-    let lastNoPos = { x: null, y: null };
+  for(let i=0;i<200;i++){
+    const x=pad+Math.random()*(W-nw-pad*2);
+    const y=pad+Math.random()*(H-nh-pad*2);
+    noBtn.style.left=`${x}px`;
+    noBtn.style.top=`${y}px`;
+    noBtn.style.transform='none';
+    return;
+  }
+}
 
-    function moveNoButton(){
-      if (noBtn.style.display === 'none') return;
+/* GIF PHYSICS */
+let sprites=[],raf;
 
-      const pad = 12;
-      const { width: W, height: H } = getArena();
+function spawnGif(){
+  if(gifIndex>=gifQueue.length)return;
+  const wrap=document.createElement('div');
+  wrap.className='gifWrap';
+  const img=document.createElement('img');
+  img.className='gifSprite';
+  img.src=gifQueue[gifIndex++]+'?v='+Date.now();
+  img.style.transform=`scale(${GIF_SCALE})`;
+  wrap.appendChild(img);
+  gifStage.appendChild(wrap);
 
-      // Use offsets relative to playground positioning context
-      const noW = noBtn.offsetWidth;
-      const noH = noBtn.offsetHeight;
+  img.onload=()=>{
+    const w=img.naturalWidth*GIF_SCALE;
+    const h=img.naturalHeight*GIF_SCALE;
+    const W=playground.clientWidth;
+    const H=playground.clientHeight;
 
-      const maxX = Math.max(pad, W - noW - pad);
-      const maxY = Math.max(pad, H - noH - pad);
+    const s={
+      wrap,
+      x:(W-w)/2,
+      y:(H-h)/2,
+      w,h,
+      vx:randNonZero(0.6,1.4),   // 🔥 SLOW SPEED
+      vy:randNonZero(0.5,1.2)    // 🔥 SLOW SPEED
+    };
+    sprites.push(s);
+    wrap.style.transform=`translate(${s.x}px,${s.y}px)`;
+    requestAnimationFrame(()=>wrap.classList.add('show'));
+    if(!raf)raf=requestAnimationFrame(tick);
+  };
+}
 
-      // Yes bounds in playground coords (offsetLeft/Top are relative to offsetParent)
-      const yesRect = yesBtn.getBoundingClientRect();
-      const pgRect  = playground.getBoundingClientRect();
-      const yesX = yesRect.left - pgRect.left;
-      const yesY = yesRect.top  - pgRect.top;
-      const yesW = yesRect.width;
-      const yesH = yesRect.height;
+function tick(){
+  const W=playground.clientWidth;
+  const H=playground.clientHeight;
+  sprites.forEach(s=>{
+    s.x+=s.vx;
+    s.y+=s.vy;
+    if(s.x<=0||s.x+s.w>=W)s.vx*=-1;
+    if(s.y<=0||s.y+s.h>=H)s.vy*=-1;
+    s.wrap.style.transform=`translate(${s.x}px,${s.y}px)`;
+  });
+  raf=requestAnimationFrame(tick);
+}
 
-      const cushion = 16;
+yesBtn.onclick=()=>{
+  speechText.textContent="abcdefg";
+  result.classList.add('show');
+  heartPop(14);
+  yesBtn.style.opacity=noBtn.style.opacity='0';
+};
 
-      for (let i=0; i<260; i++){
-        const x = pad + Math.random() * (maxX - pad);
-        const y = pad + Math.random() * (maxY - pad);
+noBtn.onclick=()=>{
+  if(noClicks>=10)return;
+  speechText.textContent=noLines[noClicks++];
+  if(noClicks===1)yesCentered=true;
+  heartPop();
+  positionYes();
+  spawnGif();
+  moveNo();
+};
+positionYes();
+</script>
 
-        const farEnough = (lastNoPos.x === null) ||
-          (Math.hypot(x - lastNoPos.x, y - lastNoPos.y) > 30);
-
-        const overlapsYes = overlaps(
-          x, y, noW, noH,
-          yesX - cushion, yesY - cushion, yesW + cushion*2, yesH + cushion*2
-        );
-
-        if (farEnough && !overlapsYes){
-          lastNoPos = { x, y };
-          noBtn.style.left = `${x}px`;
-          noBtn.style.top  = `${y}px`;
-          noBtn.style.transform = `none`;
-          return;
-        }
-      }
-
-      lastNoPos = { x: pad, y: maxY };
-      noBtn.style.left = `${pad}px`;
-      noBtn.style.top  = `${maxY}px`;
-      noBtn.style.transform = `none`;
-    }
-
-    function hideBothButtons(){
-      yesBtn.style.opacity = '0';
-      noBtn.style.opacity = '0';
-      setTimeout(() => {
-        yesBtn.style.display = 'none';
-        noBtn.style.display = 'none';
-      }, 160);
-    }
-
-    function hideNoOnly(){
-      noBtn.disabled = true;
-      noBtn.style.opacity = '0';
-      setTimeout(() => { noBtn.style.display = 'none'; }, 160);
-    }
-
-    // ---------- GIF BOUNCE (aligned arena via wrapper translate + inner img scale) ----------
-    let running = true;
-    let rafId = null;
-    const sprites = []; // { wrap, img, x, y, vx, vy, w, h }
-
-    function rand(min, max){ return Math.random() * (max - min) + min; }
-    function randNonZero(minAbs, maxAbs){
-      const mag = rand(minAbs, maxAbs);
-      return mag * (Math.random() < 0.5 ? -1 : 1);
-    }
-
-    function spawnBouncingGif(){
-      if (!running) return;
-
-      const src = nextUniqueGif();
-      if (!src) return;
-
-      // wrapper moves
-      const wrap = document.createElement('div');
-      wrap.className = 'gifWrap';
-
-      // img scales
-      const img = document.createElement('img');
-      img.className = 'gifSprite';
-      img.alt = '';
-      img.src = src + "?v=" + Date.now();
-      img.style.transform = `scale(${GIF_SCALE})`;
-
-      wrap.appendChild(img);
-      gifStage.appendChild(wrap);
-
-      img.addEventListener('load', () => {
-        const { width: W, height: H } = getArena();
-
-        const naturalW = img.naturalWidth || 120;
-        const naturalH = img.naturalHeight || 90;
-
-        // collision uses SCALED pixel dims
-        const w = naturalW * GIF_SCALE;
-        const h = naturalH * GIF_SCALE;
-
-        // spawn centered in the EXACT same arena
-        let x = (W - w) / 2;
-        let y = (H - h) / 2;
-
-        x = Math.max(0, Math.min(x, W - w));
-        y = Math.max(0, Math.min(y, H - h));
-
-        const sprite = {
-          wrap, img,
-          w, h,
-          x, y,
-          vx: randNonZero(1.4, 3.0),
-          vy: randNonZero(1.2, 2.7),
-        };
-
-        sprites.push(sprite);
-
-        wrap.style.transform = `translate(${x}px, ${y}px)`;
-        requestAnimationFrame(() => wrap.classList.add('show'));
-
-        if (!rafId) rafId = requestAnimationFrame(tick);
-      }, { once:true });
-    }
-
-    function tick(){
-      if (!running){
-        rafId = null;
-        return;
-      }
-
-      const { width: W, height: H } = getArena();
-
-      for (const s of sprites){
-        if (!s.wrap.isConnected) continue;
-
-        s.x += s.vx;
-        s.y += s.vy;
-
-        // bounce on the same arena walls as the NO button
-        if (s.x <= 0){ s.x = 0; s.vx *= -1; }
-        if (s.y <= 0){ s.y = 0; s.vy *= -1; }
-        if (s.x + s.w >= W){ s.x = Math.max(0, W - s.w); s.vx *= -1; }
-        if (s.y + s.h >= H){ s.y = Math.max(0, H - s.h); s.vy *= -1; }
-
-        s.wrap.style.transform = `translate(${s.x}px, ${s.y}px)`;
-      }
-
-      rafId = requestAnimationFrame(tick);
-    }
-
-    function stopGifs(){
-      running = false;
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = null;
-      sprites.length = 0;
-      gifStage.innerHTML = "";
-    }
-
-    // ---------- EVENTS ----------
-    yesBtn.addEventListener('click', () => {
-      speechText.textContent = "Correct choice 😌💘";
-      result.classList.add('show');
-      heartPop(14);
-
-      yesBtn.disabled = true;
-      noBtn.disabled  = true;
-
-      stopGifs();
-      hideBothButtons();
-    });
-
-    noBtn.addEventListener('click', () => {
-      if (noClicks >= 10) return;
-
-      speechText.textContent = noLines[noClicks];
-      noClicks++;
-
-      if (noClicks === 1) yesCenteredInPlayground = true;
-
-      heartPop(6);
-      positionYes();
-      spawnBouncingGif();
-
-      // move NO after layout updates so YES rect is accurate
-      requestAnimationFrame(() => moveNoButton());
-
-      if (noClicks === 10){
-        speechText.textContent = "Okay enough 😭";
-        hideNoOnly();
-      }
-    });
-
-    window.addEventListener('load', () => {
-      positionYes();
-    });
-
-    window.addEventListener('resize', () => {
-      positionYes();
-      if (noBtn.style.display !== 'none') moveNoButton();
-    });
-  </script>
 </body>
 </html>
