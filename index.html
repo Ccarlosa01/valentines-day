@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Valentine 💘</title>
+  <title>Pepinoooo </title>
 
   <style>
     :root{
@@ -277,6 +277,7 @@
       height:320px;
       perspective:1200px;
       position:relative;
+      cursor:pointer;
     }
 
     .cardInner{
@@ -456,7 +457,7 @@
     </div>
 
     <div class="modalBody">
-      <p style="margin-top:0;">Haz click en la tarjeta para abrirla 😌</p>
+      <p style="margin-top:0;">Haz click en la tarjeta para abrirla 😌 (solo se abre una vez)</p>
 
       <div class="cardStage">
         <div class="loveCard" id="loveCard">
@@ -471,7 +472,6 @@
               <div class="letterPaper" id="gift3Letter"></div>
 
               <div class="cardControls">
-                <button class="miniBtn" id="toggleCardBtn">Abrir/Cerrar 💌</button>
                 <button class="miniBtn secondary" id="typeBtn">Type / Replay ⌨️</button>
                 <button class="miniBtn secondary" id="skipBtn">Skip ⏭</button>
                 <button class="miniBtn secondary" id="musicBtn">Play Music 🎶</button>
@@ -515,7 +515,6 @@
   const modalGift3 = document.getElementById('modalGift3');
 
   const loveCard = document.getElementById('loveCard');
-  const toggleCardBtn = document.getElementById('toggleCardBtn');
   const typeBtn = document.getElementById('typeBtn');
   const skipBtn = document.getElementById('skipBtn');
   const musicBtn = document.getElementById('musicBtn');
@@ -719,7 +718,7 @@
     if (which === 2) modalGift2.style.display = 'block';
     if (which === 3){
       modalGift3.style.display = 'block';
-      startTyping();
+      // don't auto-open card; just start typing once it opens
     }
   }
 
@@ -749,20 +748,24 @@
     if (e.key === 'Escape') closeModal();
   });
 
-  // ----- Gift clicks -----
+  // Gift clicks
   gift1Btn.addEventListener('click', ()=> openModal(1));
   gift2Btn.addEventListener('click', ()=> openModal(2));
   gift3Btn.addEventListener('click', ()=> openModal(3));
 
-  // ----- Card open/close -----
-  function toggleCard(){
-    loveCard.classList.toggle('open');
-    if (loveCard.classList.contains('open')) {
-      if (!typingState.completed) startTyping();
-    }
+  // ----- Gift 3: open ONLY ONCE (no flip back) -----
+  let cardOpenedOnce = false;
+
+  function openCardOnce(){
+    if (cardOpenedOnce) return;            // prevents flipping back
+    cardOpenedOnce = true;
+
+    loveCard.classList.add('open');
+    // start typing when it opens
+    if (!typingState.completed) startTyping();
   }
-  loveCard.addEventListener('click', toggleCard);
-  toggleCardBtn.addEventListener('click', toggleCard);
+
+  loveCard.addEventListener('click', openCardOnce);
 
   // ----- Music -----
   musicBtn.addEventListener('click', async ()=>{
@@ -854,24 +857,22 @@ y se van a mantener.)`;
     renderLetterText(LETTER_TEXT);
   }
 
-  typeBtn.addEventListener('click', startTyping);
+  typeBtn.addEventListener('click', ()=>{
+    // replay typing (even if already open)
+    startTyping();
+  });
   skipBtn.addEventListener('click', skipTyping);
 
   // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
-    // stop everything from the "No/Yes" phase
     stopAndClearGifs();
     hideButtons();
 
-    // remove playground + speech bubble + subtitle text
     playground.style.display = 'none';
     speechBox.style.display = 'none';
     subtitleText.style.display = 'none';
 
-    // center gift choices vertically
     mainCard.classList.add('giftsMode');
-
-    // show gift options
     giftChoices.classList.add('show');
   });
 
