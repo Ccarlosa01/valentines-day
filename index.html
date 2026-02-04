@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pepinoooo</title>
+  <title>Valentine 💘</title>
 
   <style>
     :root{
@@ -50,6 +50,16 @@
       text-align:left;
     }
 
+    /* When YES is clicked we center the gifts vertically */
+    .card.giftsMode{
+      min-height: min(86vh, 760px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:14px;
+      padding:28px 22px 26px;
+    }
+
     .playground{
       margin-top:18px;
       width:100%;
@@ -71,7 +81,6 @@
       opacity:.85;
     }
 
-    /* wrapper moves, img scales */
     .gifWrap{
       position:absolute;
       left:0;
@@ -120,18 +129,6 @@
       z-index:6;
     }
 
-    .result{
-      display:none;
-      margin-top:14px;
-      padding:14px;
-      background:#fff0f4;
-      border-radius:18px;
-      font-weight:700;
-      position:relative;
-      z-index:10;
-    }
-    .result.show{ display:block }
-
     footer{
       margin-top:12px;
       font-size:12px;
@@ -156,10 +153,9 @@
       }
     }
 
-    /* ---------- Gift choices (appears after YES) ---------- */
+    /* ---------- Gift choices ---------- */
     .giftChoices{
       display:none;
-      margin-top:14px;
       padding:14px;
       background:#fff0f4;
       border-radius:18px;
@@ -173,6 +169,7 @@
       margin:0 0 10px;
       font-size:18px;
       font-weight:900;
+      text-align:center;
     }
 
     .giftGrid{
@@ -182,7 +179,6 @@
     }
 
     .giftBtn{
-      position:relative;
       width:100%;
       border-radius:16px;
       padding:14px 14px;
@@ -345,7 +341,6 @@
       position:relative;
     }
 
-    /* blinking cursor */
     .cursor{
       display:inline-block;
       width:8px;
@@ -386,13 +381,16 @@
 
 <body>
 
-<main class="card">
+<main class="card" id="mainCard">
 
   <div class="textzone">
     <h1>Para la futura Doctora 🩺</h1>
-    <p>Si quieres romper mi coranzoncito de pollito o por curiosidad, presiona "Ñaoooo" 😝</p>
 
-    <div class="speech">
+    <p id="subtitleText">
+      Si quieres romper mi coranzoncito de pollito o por curiosidad, presiona "Ñaoooo" 😝
+    </p>
+
+    <div class="speech" id="speechBox">
       <span id="speechText">selecciona....</span>
     </div>
   </div>
@@ -402,8 +400,6 @@
     <button id="yes">Osiiiii</button>
     <button id="no">Ñaoooo</button>
   </div>
-
-  <section id="result" class="result">abcdefg</section>
 
   <section id="giftChoices" class="giftChoices">
     <h2>Ahora elige tu regalito 🎁</h2>
@@ -499,9 +495,12 @@
 
 <script>
   // ----- DOM -----
+  const mainCard = document.getElementById('mainCard');
   const yesBtn = document.getElementById('yes');
   const noBtn  = document.getElementById('no');
   const speechText = document.getElementById('speechText');
+  const speechBox = document.getElementById('speechBox');
+  const subtitleText = document.getElementById('subtitleText');
   const playground = document.getElementById('playground');
   const gifStage = document.getElementById('gifStage');
 
@@ -653,7 +652,6 @@
         x:(W-w)/2,
         y:(H-h)/2,
         w,h,
-        // slower speeds ✅
         vx:randNonZero(0.6,1.4),
         vy:randNonZero(0.5,1.2)
       };
@@ -711,19 +709,16 @@
     modalGift2.style.display = 'none';
     modalGift3.style.display = 'none';
 
-    // reset media states
     if (gift2Video) gift2Video.pause();
     if (gift3Music) gift3Music.pause();
     musicBtn.textContent = "Play Music 🎶";
 
-    // stop typing whenever switching
     stopTyping(true);
 
     if (which === 1) modalGift1.style.display = 'block';
     if (which === 2) modalGift2.style.display = 'block';
     if (which === 3){
       modalGift3.style.display = 'block';
-      // optional: start typing immediately when opening gift 3 modal
       startTyping();
     }
   }
@@ -762,7 +757,6 @@
   // ----- Card open/close -----
   function toggleCard(){
     loveCard.classList.toggle('open');
-    // When opening the card, (re)start typing if it hasn't completed
     if (loveCard.classList.contains('open')) {
       if (!typingState.completed) startTyping();
     }
@@ -786,7 +780,6 @@
   });
 
   // ----- TYPEWRITER (Gift 3) -----
-  // Put your final letter text here:
   const LETTER_TEXT =
 `(Escribe tu carta aquí.
 Puedes usar saltos de línea
@@ -796,13 +789,12 @@ y se van a mantener.)`;
     timer: null,
     index: 0,
     completed: false,
-    speedMs: 18,      // base speed (lower = faster)
-    jitterMs: 20,     // random extra delay for human feel
+    speedMs: 18,
+    jitterMs: 20,
     cursorEl: null
   };
 
   function renderLetterText(text){
-    // keep a blinking cursor at the end
     gift3Letter.textContent = text;
 
     if (!typingState.cursorEl){
@@ -811,7 +803,6 @@ y se van a mantener.)`;
       c.textContent = '|';
       typingState.cursorEl = c;
     }
-    // Append cursor (only if not already)
     gift3Letter.appendChild(typingState.cursorEl);
   }
 
@@ -826,31 +817,26 @@ y se van a mantener.)`;
   }
 
   function startTyping(){
-    // If modal isn’t visible, don’t type
     if (modalGift3.style.display === 'none') return;
 
     stopTyping(false);
-
     typingState.index = 0;
     typingState.completed = false;
 
-    renderLetterText(""); // clears + adds cursor
+    renderLetterText("");
 
     function step(){
-      // If modal closed while typing
       if (modalGift3.style.display === 'none'){
         stopTyping(true);
         return;
       }
 
       typingState.index++;
-
       const current = LETTER_TEXT.slice(0, typingState.index);
       renderLetterText(current);
 
       if (typingState.index >= LETTER_TEXT.length){
         typingState.completed = true;
-        // keep cursor blinking at the end
         typingState.timer = null;
         return;
       }
@@ -859,7 +845,6 @@ y se van a mantener.)`;
       typingState.timer = setTimeout(step, delay);
     }
 
-    // Small delay so it feels like “starting”
     typingState.timer = setTimeout(step, 250);
   }
 
@@ -869,23 +854,24 @@ y se van a mantener.)`;
     renderLetterText(LETTER_TEXT);
   }
 
-  typeBtn.addEventListener('click', ()=>{
-    // Replay typing
-    startTyping();
-  });
-
-  skipBtn.addEventListener('click', ()=>{
-    skipTyping();
-  });
+  typeBtn.addEventListener('click', startTyping);
+  skipBtn.addEventListener('click', skipTyping);
 
   // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
-    speechText.textContent = "abcdefg";
-    heartPop(14);
-
+    // stop everything from the "No/Yes" phase
     stopAndClearGifs();
     hideButtons();
 
+    // remove playground + speech bubble + subtitle text
+    playground.style.display = 'none';
+    speechBox.style.display = 'none';
+    subtitleText.style.display = 'none';
+
+    // center gift choices vertically
+    mainCard.classList.add('giftsMode');
+
+    // show gift options
     giftChoices.classList.add('show');
   });
 
