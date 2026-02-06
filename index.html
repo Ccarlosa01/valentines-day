@@ -73,7 +73,7 @@
 
     .gifStage{
       position:absolute;
-      inset:0;
+      inset:0;              /* IMPORTANT: EXACT same bounds as playground */
       pointer-events:none;
       z-index:0;
       border-radius:18px;
@@ -194,7 +194,6 @@
       user-select:none;
     }
     .giftBtn:hover{ transform:scale(1.01); }
-    .giftBtn span{ opacity:.7; font-weight:800; }
 
     /* ---------- Modal system ---------- */
     .overlay{
@@ -266,81 +265,138 @@
       display:block;
     }
 
-    /* ---------- Gift 3: Opening card animation ---------- */
-    .cardStage{
-      margin-top:12px;
+    /* ---------- Gift 3: Envelope + letter (realistic) ---------- */
+    .envStage{
+      margin-top:14px;
       display:grid;
       place-items:center;
     }
 
-    .loveCard{
-      width:min(520px, 92%);
-      height:320px;
-      perspective:1200px;
+    .envelope{
+      width:min(560px, 94%);
+      height:360px;
       position:relative;
       cursor:pointer;
+      user-select:none;
     }
 
-    .cardInner{
+    .envBack{
       position:absolute;
       inset:0;
-      transform-style:preserve-3d;
-      transition: transform 900ms cubic-bezier(.2,.8,.2,1);
+      background:#fff;
       border-radius:18px;
-    }
-
-    .loveCard.open .cardInner{
-      transform: rotateY(-160deg);
-    }
-
-    .cardFront, .cardBack{
-      position:absolute;
-      inset:0;
-      border-radius:18px;
-      backface-visibility:hidden;
-      overflow:hidden;
       border:2px solid rgba(0,0,0,.12);
       box-shadow:0 18px 40px rgba(0,0,0,.18);
+      overflow:hidden;
     }
 
-    .cardFront{
-      background:linear-gradient(135deg, #ff7aa5, #ffd1dc);
+    .envPocket{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:58%;
+      background:linear-gradient(135deg,#ffd1dc,#ffb3c1);
+      border-bottom-left-radius:18px;
+      border-bottom-right-radius:18px;
+      border-top:2px solid rgba(0,0,0,.08);
+    }
+
+    .envPocket::before{
+      content:"";
+      position:absolute;
+      left:0; right:0; top:-2px; bottom:0;
+      clip-path:polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%);
+      background:rgba(255,255,255,.25);
+      pointer-events:none;
+    }
+
+    .envFlap{
+      position:absolute;
+      left:0; right:0; top:0;
+      height:62%;
+      background:linear-gradient(135deg,#ff7aa5,#ffd1dc);
+      clip-path:polygon(0 0, 100% 0, 50% 82%);
+      transform-origin:top center;
+      transform:rotateX(0deg);
+      transition:transform 900ms cubic-bezier(.2,.9,.2,1);
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.12));
+    }
+
+    .seal{
+      position:absolute;
+      left:50%; top:56%;
+      transform:translate(-50%,-50%);
+      width:44px; height:44px;
+      border-radius:999px;
+      background:#ff2e63;
+      box-shadow:0 10px 20px rgba(0,0,0,.15);
       display:grid;
       place-items:center;
-      padding:18px;
-      text-align:center;
-    }
-    .cardFront h3{
-      margin:0;
-      font-size:22px;
+      color:#fff;
       font-weight:1000;
-      color:#111;
-      text-shadow:0 2px 0 rgba(255,255,255,.35);
-    }
-    .cardFront p{
-      margin:8px 0 0;
-      font-weight:900;
-      opacity:.85;
+      z-index:3;
     }
 
-    .cardBack{
+    .letter{
+      position:absolute;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%) translateY(160px);
+      width:92%;
+      height:285px;
       background:#fff;
-      transform: rotateY(180deg);
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.10);
+      box-shadow:0 12px 26px rgba(0,0,0,.16);
+      transition:transform 900ms cubic-bezier(.2,.9,.2,1);
+      z-index:1;
+      overflow:hidden;
+    }
+
+    .letter::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(transparent 0 26px, rgba(0,0,0,.05) 27px) 0 0 / 100% 28px;
+      opacity:.45;
+      pointer-events:none;
     }
 
     .letterPaper{
+      position:relative;
+      z-index:2;
+      margin:14px;
       background:#fff0f4;
       border:1px solid rgba(0,0,0,.10);
-      border-radius:16px;
+      border-radius:12px;
       padding:14px;
-      font-weight:700;
+      font-weight:750;
       white-space:pre-wrap;
-      min-height:140px;
-      position:relative;
+      min-height:210px;
+    }
+
+    .envelope.open .envFlap{
+      transform:rotateX(165deg);
+    }
+    .envelope.open .letter{
+      transform:translateX(-50%) translateY(-14px);
+    }
+
+    .musicRow{
+      margin-top:12px;
+      display:flex;
+      justify-content:center;
+    }
+    .miniBtn{
+      border:0;
+      border-radius:999px;
+      padding:10px 12px;
+      font-weight:1000;
+      cursor:pointer;
+      box-shadow:0 10px 22px rgba(0,0,0,.12);
+      background:#fff;
+      color:#111;
+      border:2px solid rgba(0,0,0,.15);
     }
 
     .cursor{
@@ -356,36 +412,13 @@
       50%, 100% { opacity: 0; }
     }
 
-    .cardControls{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:2px;
-    }
-
-    .miniBtn{
-      border:0;
-      border-radius:999px;
-      padding:10px 12px;
-      font-weight:1000;
-      cursor:pointer;
-      box-shadow:0 10px 22px rgba(0,0,0,.12);
-      background:#111;
-      color:#fff;
-    }
-    .miniBtn.secondary{
-      background:#fff;
-      color:#111;
-      border:2px solid rgba(0,0,0,.15);
-    }
-
     /* ---------- OPENING FX (face.png + opening.mp3) ---------- */
     .openFx{
       position:fixed;
       inset:0;
       display:none;
       place-items:center;
-      z-index:10050; /* above everything */
+      z-index:10050;
       pointer-events:all;
       background:rgba(0,0,0,.10);
     }
@@ -438,9 +471,9 @@
   <section id="giftChoices" class="giftChoices">
     <h2>Ahora elige tu regalito 🎁</h2>
     <div class="giftGrid">
-      <div class="giftBtn" id="gift1Btn">🎀 Regalo #1 </div>
-      <div class="giftBtn" id="gift2Btn">🎥 Regalo #2 </div>
-      <div class="giftBtn" id="gift3Btn">💌 Regalo #3 </div>
+      <div class="giftBtn" id="gift1Btn">🎀 Regalo #1</div>
+      <div class="giftBtn" id="gift2Btn">🎥 Regalo #2</div>
+      <div class="giftBtn" id="gift3Btn">💌 Regalo #3</div>
     </div>
   </section>
 
@@ -491,7 +524,7 @@
     </div>
   </div>
 
-  <!-- Gift 3 Modal -->
+  <!-- Gift 3 Modal (ENVELOPE) -->
   <div class="modal" id="modalGift3" style="display:none;">
     <div class="modalHeader">
       <h3 class="modalTitle">💌 Regalo #3</h3>
@@ -499,34 +532,25 @@
     </div>
 
     <div class="modalBody">
-      <!-- removed the two helper texts here -->
-
-      <div class="cardStage">
-        <div class="loveCard" id="loveCard">
-          <div class="cardInner">
-            <div class="cardFront">
-              <div>
-                <h3>Para ti 🩺💘</h3>
-                <p>(click to open)</p>
-              </div>
-            </div>
-            <div class="cardBack">
-              <div class="letterPaper" id="gift3Letter"></div>
-
-              <div class="cardControls">
-                <!-- removed Type/Replay and Skip buttons -->
-                <button class="miniBtn secondary" id="musicBtn">Play Music 🎶</button>
-              </div>
-
-              <audio id="gift3Music" preload="auto" loop>
-                <source src="love.mp3" type="audio/mpeg">
-              </audio>
-            </div>
+      <div class="envStage">
+        <div class="envelope" id="envelope">
+          <div class="envBack"></div>
+          <div class="envFlap"></div>
+          <div class="envPocket"></div>
+          <div class="seal">❤</div>
+          <div class="letter">
+            <div class="letterPaper" id="gift3Letter"></div>
           </div>
         </div>
-      </div>
 
-      <!-- removed the note text here -->
+        <div class="musicRow">
+          <button class="miniBtn" id="musicBtn">Play Music 🎶</button>
+        </div>
+
+        <audio id="gift3Music" preload="auto" loop>
+          <source src="love.mp3" type="audio/mpeg">
+        </audio>
+      </div>
     </div>
   </div>
 
@@ -553,17 +577,16 @@
   const modalGift2 = document.getElementById('modalGift2');
   const modalGift3 = document.getElementById('modalGift3');
 
-  const loveCard = document.getElementById('loveCard');
   const musicBtn = document.getElementById('musicBtn');
   const gift3Music = document.getElementById('gift3Music');
   const gift2Video = document.getElementById('gift2Video');
   const gift3Letter = document.getElementById('gift3Letter');
+  const envelope = document.getElementById('envelope');
 
   // Gift text nodes
   const gift1TextEl = document.getElementById('gift1Text');
   const gift2TextEl = document.getElementById('gift2Text');
 
-  // Set your gift texts here
   gift1TextEl.textContent =
     "When it comes to you, I remember every little detail in every little conversation we have. And you know that no matter what, I'll always try to make you happy.";
 
@@ -603,9 +626,8 @@
     }
   }
 
-  function yesScale(){
-    return Math.min(3.2,1+noClicks*.16);
-  }
+  function yesScale(){ return Math.min(3.2,1+noClicks*.16); }
+
   function positionYes(){
     const s=yesScale();
     if(!yesCentered){
@@ -623,8 +645,11 @@
     if (noBtn.style.display === 'none') return;
 
     const pad=12;
-    const W=playground.clientWidth;
-    const H=playground.clientHeight;
+
+    // IMPORTANT: same boundary element for NO + GIFS = playground inner box
+    const W = playground.clientWidth;
+    const H = playground.clientHeight;
+
     const nw=noBtn.offsetWidth;
     const nh=noBtn.offsetHeight;
 
@@ -675,6 +700,13 @@
     return Math.random()<.5 ? -v : v;
   }
 
+  function getBounds(){
+    // EXACTLY the same content box as the NO button:
+    // gifStage is inset:0 inside playground, so sizes match
+    // Use playground for authoritative boundaries.
+    return { W: playground.clientWidth, H: playground.clientHeight };
+  }
+
   function spawnGif(){
     if(!running) return;
     if(gifIndex>=gifQueue.length) return;
@@ -691,9 +723,7 @@
     gifStage.appendChild(wrap);
 
     img.onload=()=>{
-      // IMPORTANT: use the *playground* as the true boundary
-      const W=playground.clientWidth;
-      const H=playground.clientHeight;
+      const { W, H } = getBounds();
 
       const w=img.naturalWidth*GIF_SCALE;
       const h=img.naturalHeight*GIF_SCALE;
@@ -703,10 +733,12 @@
         x:(W-w)/2,
         y:(H-h)/2,
         w,h,
-        vx:randNonZero(0.6,1.2),
-        vy:randNonZero(0.5,1.1)
+        // slightly slower
+        vx:randNonZero(0.45,0.95),
+        vy:randNonZero(0.40,0.90)
       };
 
+      // clamp to boundary
       s.x = Math.max(0, Math.min(s.x, W - s.w));
       s.y = Math.max(0, Math.min(s.y, H - s.h));
 
@@ -724,8 +756,7 @@
       return;
     }
 
-    const W=playground.clientWidth;
-    const H=playground.clientHeight;
+    const { W, H } = getBounds();
 
     for(const s of sprites){
       if(!s.wrap.isConnected) continue;
@@ -733,6 +764,7 @@
       s.x+=s.vx;
       s.y+=s.vy;
 
+      // HARD boundary: gif edges never leave playground
       if(s.x<=0){ s.x=0; s.vx*=-1; }
       if(s.y<=0){ s.y=0; s.vy*=-1; }
       if(s.x+s.w>=W){ s.x=Math.max(0,W-s.w); s.vx*=-1; }
@@ -777,6 +809,15 @@
   }
 
   // ----- Modal helpers -----
+  function resetGift3(){
+    envelope.classList.remove('open');
+    cardOpenedOnce = false;
+    stopTyping(true);
+    gift3Letter.textContent = "";
+    if (gift3Music) gift3Music.pause();
+    musicBtn.textContent = "Play Music 🎶";
+  }
+
   function openModal(which){
     overlay.classList.add('show');
 
@@ -785,14 +826,13 @@
     modalGift3.style.display = 'none';
 
     if (gift2Video) gift2Video.pause();
-    if (gift3Music) gift3Music.pause();
-    musicBtn.textContent = "Play Music 🎶";
-
-    stopTyping(true);
 
     if (which === 1) modalGift1.style.display = 'block';
     if (which === 2) modalGift2.style.display = 'block';
-    if (which === 3) modalGift3.style.display = 'block';
+    if (which === 3){
+      resetGift3();
+      modalGift3.style.display = 'block';
+    }
   }
 
   function closeModal(){
@@ -803,10 +843,7 @@
     modalGift3.style.display = 'none';
 
     if (gift2Video) gift2Video.pause();
-    if (gift3Music) gift3Music.pause();
-    musicBtn.textContent = "Play Music 🎶";
-
-    stopTyping(true);
+    resetGift3();
   }
 
   overlay.addEventListener('click', (e)=>{
@@ -826,33 +863,9 @@
   gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
   gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
 
-  // ----- Gift 3: open ONLY ONCE (no flip back) -----
+  // ----- Gift 3: open ONLY ONCE + auto type AFTER open -----
   let cardOpenedOnce = false;
 
-  function openCardOnce(){
-    if (cardOpenedOnce) return;
-    cardOpenedOnce = true;
-    loveCard.classList.add('open');
-    if (!typingState.completed) startTyping(); // auto type on open
-  }
-  loveCard.addEventListener('click', openCardOnce);
-
-  // ----- Music -----
-  musicBtn.addEventListener('click', async ()=>{
-    try{
-      if (gift3Music.paused){
-        await gift3Music.play();
-        musicBtn.textContent = "Pause Music ⏸";
-      } else {
-        gift3Music.pause();
-        musicBtn.textContent = "Play Music 🎶";
-      }
-    }catch(err){
-      musicBtn.textContent = "Tap again 🎶";
-    }
-  });
-
-  // ----- TYPEWRITER (Gift 3) -----
   const LETTER_TEXT =
 `Love can overcome anything
 Love can overcome anything
@@ -890,6 +903,8 @@ Love can overcome anything`;
     if (clearCursor && typingState.cursorEl && typingState.cursorEl.parentNode){
       typingState.cursorEl.parentNode.removeChild(typingState.cursorEl);
     }
+    typingState.index = 0;
+    typingState.completed = false;
   }
 
   function startTyping(){
@@ -921,8 +936,33 @@ Love can overcome anything`;
       typingState.timer = setTimeout(step, delay);
     }
 
-    typingState.timer = setTimeout(step, 250);
+    typingState.timer = setTimeout(step, 300);
   }
+
+  function openEnvelopeOnce(){
+    if (cardOpenedOnce) return;
+    cardOpenedOnce = true;
+    envelope.classList.add('open');
+
+    // Start typing after the letter begins sliding out
+    setTimeout(startTyping, 650);
+  }
+  envelope.addEventListener('click', openEnvelopeOnce);
+
+  // ----- Music button (manual toggle) -----
+  musicBtn.addEventListener('click', async ()=>{
+    try{
+      if (gift3Music.paused){
+        await gift3Music.play();
+        musicBtn.textContent = "Pause Music ⏸";
+      } else {
+        gift3Music.pause();
+        musicBtn.textContent = "Play Music 🎶";
+      }
+    }catch(err){
+      musicBtn.textContent = "Tap again 🎶";
+    }
+  });
 
   // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
@@ -957,7 +997,10 @@ Love can overcome anything`;
   });
 
   window.addEventListener('load', positionYes);
-  window.addEventListener('resize', positionYes);
+  window.addEventListener('resize', ()=>{
+    positionYes();
+    // keep gifs inside after resize by clamping next frame
+  });
 </script>
 
 </body>
