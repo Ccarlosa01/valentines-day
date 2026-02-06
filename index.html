@@ -400,7 +400,6 @@
       filter: drop-shadow(0 18px 35px rgba(0,0,0,.25));
     }
 
-    /* Expand 1s (0->50%), Shrink 1s (50->100%) while spinning */
     .openFx.run img{
       animation: openFxAnim 2s ease-in-out forwards;
     }
@@ -453,7 +452,7 @@
   <img src="face.png" alt="opening face"/>
 </div>
 
-<!-- Sound effect (must be triggered by click) -->
+<!-- Sound effect -->
 <audio id="openSfx" preload="auto">
   <source src="opening.mp3" type="audio/mpeg">
 </audio>
@@ -468,7 +467,7 @@
       <button class="closeBtn" data-close>Close ✖</button>
     </div>
     <div class="modalBody">
-      <p id="gift1Text">(Pon tu texto aquí para el regalo #1)</p>
+      <p id="gift1Text"></p>
       <div class="mediaBox">
         <img id="gift1Image" src="gift1.jpg" alt="Gift 1 image">
       </div>
@@ -482,7 +481,7 @@
       <button class="closeBtn" data-close>Close ✖</button>
     </div>
     <div class="modalBody">
-      <p id="gift2Text">(Pon tu texto aquí para el regalo #2)</p>
+      <p id="gift2Text"></p>
       <div class="mediaBox">
         <video id="gift2Video" controls playsinline preload="metadata">
           <source src="gift2.mp4" type="video/mp4">
@@ -565,6 +564,17 @@
   const gift2Video = document.getElementById('gift2Video');
   const gift3Letter = document.getElementById('gift3Letter');
 
+  // Gift text nodes
+  const gift1TextEl = document.getElementById('gift1Text');
+  const gift2TextEl = document.getElementById('gift2Text');
+
+  // Set your gift texts here
+  gift1TextEl.textContent =
+    "When it comes to you, I remember every little detail in every little conversation we have. And you know that no matter what, I'll always try to make you happy.";
+
+  gift2TextEl.textContent =
+    "This is the movie I play in my head when I think about you...";
+
   // Opening FX
   const openFx = document.getElementById('openFx');
   const openSfx = document.getElementById('openSfx');
@@ -586,7 +596,6 @@
   let noClicks = 0;
   let yesCentered = false;
 
-  // ----- Hearts -----
   function heartPop(n=6){
     for(let i=0;i<n;i++){
       const h=document.createElement('div');
@@ -599,7 +608,6 @@
     }
   }
 
-  // ----- YES scaling/position -----
   function yesScale(){
     return Math.min(3.2,1+noClicks*.16);
   }
@@ -616,7 +624,6 @@
     }
   }
 
-  // ----- NO move -----
   function moveNo(){
     if (noBtn.style.display === 'none') return;
 
@@ -753,20 +760,17 @@
     if (fxRunning) return;
     fxRunning = true;
 
-    // show overlay and restart animation cleanly
     openFx.classList.add('show');
     openFx.classList.remove('run');
-    void openFx.offsetHeight; // force reflow to reset animation
+    void openFx.offsetHeight;
     openFx.classList.add('run');
 
-    // play sound (should work because user clicked)
     try{
       openSfx.pause();
       openSfx.currentTime = 0;
       openSfx.play();
-    }catch(e){ /* ignore autoplay edge cases */ }
+    }catch(e){}
 
-    // after 2s (1s grow + 1s shrink), open the gift
     setTimeout(() => {
       openFx.classList.remove('run');
       openFx.classList.remove('show');
@@ -791,10 +795,7 @@
 
     if (which === 1) modalGift1.style.display = 'block';
     if (which === 2) modalGift2.style.display = 'block';
-    if (which === 3){
-      modalGift3.style.display = 'block';
-      // card opens on click once
-    }
+    if (which === 3) modalGift3.style.display = 'block';
   }
 
   function closeModal(){
@@ -856,9 +857,12 @@
 
   // ----- TYPEWRITER (Gift 3) -----
   const LETTER_TEXT =
-`(Escribe tu carta aquí.
-Puedes usar saltos de línea
-y se van a mantener.)`;
+`Love can overcome anything
+Love can overcome anything
+Love can overcome anything
+Love can overcome anything
+Love can overcome anything
+Love can overcome anything`;
 
   const typingState = {
     timer: null,
