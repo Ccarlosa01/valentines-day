@@ -272,17 +272,16 @@
       background:#000;
     }
 
-    /* helper lines for Gift 2 */
+    /* Gift 2 helper text */
     .gift2Help{
       font-style:italic;
-      margin-top:10px;
-      margin-bottom:0;
+      margin:10px 0 0;
+      opacity:.95;
     }
-    .gift2Help + .gift2Help{ margin-top:4px; }
     .gift2Help a{
       color:inherit;
       text-decoration:underline;
-      font-weight:800;
+      font-weight:900;
     }
 
     /* ---------- Gift 3: Opening card animation ---------- */
@@ -502,17 +501,13 @@
     <div class="modalBody">
       <p id="gift2Text"></p>
 
-      <!-- ✅ Added helper lines -->
-      <p class="gift2Help">primero intenta cerrar el gift y abrirlo otra vez</p>
+      <!-- Added helper lines (italic + hyperlink) -->
+      <p class="gift2Help"><em>primero intenta cerrar el gift y abrirlo otra vez</em></p>
       <p class="gift2Help">
-        si nada pasa... 
-        <a href="https://drive.google.com/file/d/1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ/view" target="_blank" rel="noopener">
-          presiona aqui
-        </a>
+        <em>si nada pasa... <a id="gift2DriveLink" href="#" target="_blank" rel="noopener">presiona aqui</a></em>
       </p>
 
       <div class="mediaBox">
-        <!-- Google Drive preview player (reliable streaming) -->
         <iframe
           id="gift2Frame"
           class="driveVideo"
@@ -590,7 +585,14 @@
 
   // Gift 2 (Google Drive iframe)
   const gift2Frame = document.getElementById('gift2Frame');
-  const GIFT2_DRIVE_PREVIEW = "https://drive.google.com/file/d/1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ/preview";
+  const gift2DriveLink = document.getElementById('gift2DriveLink');
+
+  const DRIVE_FILE_ID = "1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ";
+  const GIFT2_DRIVE_PREVIEW = `https://drive.google.com/file/d/${DRIVE_FILE_ID}/preview`;
+  const GIFT2_DRIVE_VIEW = `https://drive.google.com/file/d/${DRIVE_FILE_ID}/view`;
+
+  // set hyperlink
+  if (gift2DriveLink) gift2DriveLink.href = GIFT2_DRIVE_VIEW;
 
   // Gift text nodes
   const gift1TextEl = document.getElementById('gift1Text');
@@ -807,91 +809,6 @@
     }, 2000);
   }
 
-  // ----- Modal helpers -----
-  function stopGift2(){
-    // Stop Drive video by unloading it
-    if (gift2Frame) gift2Frame.src = "";
-  }
-
-  function openModal(which){
-    overlay.classList.add('show');
-
-    modalGift1.style.display = 'none';
-    modalGift2.style.display = 'none';
-    modalGift3.style.display = 'none';
-
-    stopGift2();
-    if (gift3Music) gift3Music.pause();
-    musicBtn.textContent = "Play Music 🎶";
-
-    stopTyping(true);
-
-    if (which === 1) modalGift1.style.display = 'block';
-    if (which === 2){
-      modalGift2.style.display = 'block';
-      // Load ONLY when opened
-      if (gift2Frame) gift2Frame.src = GIFT2_DRIVE_PREVIEW;
-    }
-    if (which === 3) modalGift3.style.display = 'block';
-  }
-
-  function closeModal(){
-    overlay.classList.remove('show');
-
-    modalGift1.style.display = 'none';
-    modalGift2.style.display = 'none';
-    modalGift3.style.display = 'none';
-
-    stopGift2();
-    if (gift3Music) gift3Music.pause();
-    musicBtn.textContent = "Play Music 🎶";
-
-    stopTyping(true);
-  }
-
-  overlay.addEventListener('click', (e)=>{
-    if (e.target === overlay) closeModal();
-  });
-
-  document.addEventListener('click', (e)=>{
-    if (e.target && e.target.matches('[data-close]')) closeModal();
-  });
-
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape') closeModal();
-  });
-
-  // Gift clicks -> play FX then open
-  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
-  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
-  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
-
-  // ----- Gift 3: open ONLY ONCE (no flip back) -----
-  let cardOpenedOnce = false;
-
-  function openCardOnce(){
-    if (cardOpenedOnce) return;
-    cardOpenedOnce = true;
-    loveCard.classList.add('open');
-    if (!typingState.completed) startTyping(); // auto type on open
-  }
-  loveCard.addEventListener('click', openCardOnce);
-
-  // ----- Music -----
-  musicBtn.addEventListener('click', async ()=>{
-    try{
-      if (gift3Music.paused){
-        await gift3Music.play();
-        musicBtn.textContent = "Pause Music ⏸";
-      } else {
-        gift3Music.pause();
-        musicBtn.textContent = "Play Music 🎶";
-      }
-    }catch(err){
-      musicBtn.textContent = "Tap again 🎶";
-    }
-  });
-
   // ----- TYPEWRITER (Gift 3) -----
   const LETTER_TEXT =
 `Love can overcome anything
@@ -963,6 +880,126 @@ Love can overcome anything`;
 
     typingState.timer = setTimeout(step, 250);
   }
+
+  // ----- Modal helpers -----
+  function stopGift2(){
+    if (gift2Frame) gift2Frame.src = "";
+  }
+
+  function openModal(which){
+    overlay.classList.add('show');
+
+    modalGift1.style.display = 'none';
+    modalGift2.style.display = 'none';
+    modalGift3.style.display = 'none';
+
+    stopGift2();
+    if (gift3Music) gift3Music.pause();
+    musicBtn.textContent = "Play Music 🎶";
+
+    stopTyping(true);
+
+    if (which === 1) modalGift1.style.display = 'block';
+
+    if (which === 2){
+      modalGift2.style.display = 'block';
+      if (gift2Frame) gift2Frame.src = GIFT2_DRIVE_PREVIEW;
+    }
+
+    if (which === 3) modalGift3.style.display = 'block';
+  }
+
+  function closeModal(){
+    overlay.classList.remove('show');
+
+    modalGift1.style.display = 'none';
+    modalGift2.style.display = 'none';
+    modalGift3.style.display = 'none';
+
+    stopGift2();
+    if (gift3Music) gift3Music.pause();
+    musicBtn.textContent = "Play Music 🎶";
+
+    stopTyping(true);
+  }
+
+  overlay.addEventListener('click', (e)=>{
+    if (e.target === overlay) closeModal();
+  });
+
+  document.addEventListener('click', (e)=>{
+    if (e.target && e.target.matches('[data-close]')) closeModal();
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Gift clicks -> play FX then open
+  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
+  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
+  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
+
+  // ----- Gift 3: open ONLY ONCE (no flip back) -----
+  let cardOpenedOnce = false;
+
+  function openCardOnce(){
+    if (cardOpenedOnce) return;
+    cardOpenedOnce = true;
+    loveCard.classList.add('open');
+    if (!typingState.completed) startTyping(); // auto type on open
+  }
+  loveCard.addEventListener('click', openCardOnce);
+
+  // ----- Music -----
+  musicBtn.addEventListener('click', async ()=>{
+    try{
+      if (gift3Music.paused){
+        await gift3Music.play();
+        musicBtn.textContent = "Pause Music ⏸";
+      } else {
+        gift3Music.pause();
+        musicBtn.textContent = "Play Music 🎶";
+      }
+    }catch(err){
+      musicBtn.textContent = "Tap again 🎶";
+    }
+  });
+
+  // ----- Main events -----
+  yesBtn.addEventListener('click', ()=>{
+    stopAndClearGifs();
+    hideButtons();
+
+    playground.style.display = 'none';
+    speechBox.style.display = 'none';
+    subtitleText.style.display = 'none';
+
+    mainCard.classList.add('giftsMode');
+    giftChoices.classList.add('show');
+  });
+
+  noBtn.addEventListener('click', ()=>{
+    if(noClicks>=10) return;
+
+    speechText.textContent = noLines[noClicks];
+    noClicks++;
+
+    if(noClicks===1) yesCentered=true;
+
+    heartPop(6);
+    positionYes();
+    spawnGif();
+
+    requestAnimationFrame(()=>moveNo());
+
+    if(noClicks===10){
+      hideNoOnly();
+    }
+  });
+
+  window.addEventListener('load', positionYes);
+  window.addEventListener('resize', positionYes);
 </script>
 
 </body>
