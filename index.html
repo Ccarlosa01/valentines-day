@@ -322,25 +322,34 @@
     .cardBack{
       background:#fff;
       transform: rotateY(180deg);
-      padding:12px; /* keep a little padding */
+      padding:16px;
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:12px;
+    
+      /* NEW: center contents on the white back */
+      align-items:center;
+      justify-content:center;
     }
-
-    /* Make the letter text use the full width */
+    
     .letterPaper{
-      width:100%;
-      margin:0;
+      /* NEW: centered + not full-bleed */
+      width:min(460px, 100%);
+      margin:0 auto;
+    
       background:#fff0f4;
       border:1px solid rgba(0,0,0,.10);
       border-radius:16px;
-      padding:16px;
+      padding:18px;
       font-weight:700;
       white-space:pre-wrap;
-      min-height:180px;
+    
+      /* NEW: taller pink area */
+      min-height:240px;
+    
       position:relative;
     }
+
 
     .musicRow{
       display:flex;
@@ -765,12 +774,7 @@
 
   // ----- Gift 3 typing -----
   const LETTER_TEXT =
-`Love can overcome anything
-Love can overcome anything
-Love can overcome anything
-Love can overcome anything
-Love can overcome anything
-Love can overcome anything`;
+`Love can overcome anything Love can overcome anything Love can overcome anything Love can overcome anything Love can overcome anything Love can overcome anything`;
 
   const typingState = {
     timer: null,
@@ -922,6 +926,7 @@ Love can overcome anything`;
 
   // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
+    heartPop(6);
     stopAndClearGifs();
     hideButtons();
 
@@ -941,7 +946,6 @@ Love can overcome anything`;
 
     if(noClicks===1) yesCentered=true;
 
-    heartPop(6);
     positionYes();
     spawnGif();
 
