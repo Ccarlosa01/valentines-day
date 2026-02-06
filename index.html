@@ -261,8 +261,12 @@
       display:block;
       height:auto;
     }
-    .mediaBox video{
+
+    /* Gift 2: Google Drive embed */
+    .driveVideo{
       width:100%;
+      aspect-ratio:16/9;
+      border:0;
       display:block;
     }
 
@@ -483,10 +487,17 @@
     <div class="modalBody">
       <p id="gift2Text"></p>
       <div class="mediaBox">
-        <video id="gift2Video" controls playsinline preload="metadata">
-          <source src="https://drive.google.com/uc?export=download&id=1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+        <!-- Google Drive preview player (reliable streaming) -->
+        <iframe
+          id="gift2Frame"
+          class="driveVideo"
+          src=""
+          allow="autoplay; encrypted-media; fullscreen"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          title="Gift 2 Video"
+        ></iframe>
       </div>
     </div>
   </div>
@@ -499,8 +510,6 @@
     </div>
 
     <div class="modalBody">
-      <!-- removed the two helper texts here -->
-
       <div class="cardStage">
         <div class="loveCard" id="loveCard">
           <div class="cardInner">
@@ -514,7 +523,6 @@
               <div class="letterPaper" id="gift3Letter"></div>
 
               <div class="cardControls">
-                <!-- removed Type/Replay and Skip buttons -->
                 <button class="miniBtn secondary" id="musicBtn">Play Music 🎶</button>
               </div>
 
@@ -525,8 +533,6 @@
           </div>
         </div>
       </div>
-
-      <!-- removed the note text here -->
     </div>
   </div>
 
@@ -556,14 +562,16 @@
   const loveCard = document.getElementById('loveCard');
   const musicBtn = document.getElementById('musicBtn');
   const gift3Music = document.getElementById('gift3Music');
-  const gift2Video = document.getElementById('gift2Video');
   const gift3Letter = document.getElementById('gift3Letter');
+
+  // Gift 2 (Google Drive iframe)
+  const gift2Frame = document.getElementById('gift2Frame');
+  const GIFT2_DRIVE_PREVIEW = "https://drive.google.com/file/d/1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ/preview";
 
   // Gift text nodes
   const gift1TextEl = document.getElementById('gift1Text');
   const gift2TextEl = document.getElementById('gift2Text');
 
-  // Set your gift texts here
   gift1TextEl.textContent =
     "When it comes to you, I remember every little detail in every little conversation we have. And you know that no matter what, I'll always try to make you happy.";
 
@@ -751,6 +759,7 @@
     gifStage.innerHTML="";
   }
 
+  // ----- OPENING FX (play sound + animate face.png, then open gift) -----
   function playOpeningFxThen(openGiftFn){
     if (fxRunning) return;
     fxRunning = true;
@@ -774,6 +783,12 @@
     }, 2000);
   }
 
+  // ----- Modal helpers -----
+  function stopGift2(){
+    // Stop Google Drive video by unloading the iframe
+    if (gift2Frame) gift2Frame.src = "";
+  }
+
   function openModal(which){
     overlay.classList.add('show');
 
@@ -781,14 +796,19 @@
     modalGift2.style.display = 'none';
     modalGift3.style.display = 'none';
 
-    if (gift2Video) gift2Video.pause();
+    // stop media when switching
+    stopGift2();
     if (gift3Music) gift3Music.pause();
     musicBtn.textContent = "Play Music 🎶";
 
     stopTyping(true);
 
     if (which === 1) modalGift1.style.display = 'block';
-    if (which === 2) modalGift2.style.display = 'block';
+    if (which === 2){
+      modalGift2.style.display = 'block';
+      // load video only when opened (better + prevents autoplay elsewhere)
+      if (gift2Frame) gift2Frame.src = GIFT2_DRIVE_PREVIEW;
+    }
     if (which === 3) modalGift3.style.display = 'block';
   }
 
@@ -799,7 +819,7 @@
     modalGift2.style.display = 'none';
     modalGift3.style.display = 'none';
 
-    if (gift2Video) gift2Video.pause();
+    stopGift2();
     if (gift3Music) gift3Music.pause();
     musicBtn.textContent = "Play Music 🎶";
 
@@ -818,20 +838,23 @@
     if (e.key === 'Escape') closeModal();
   });
 
+  // Gift clicks -> play FX then open
   gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
   gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
   gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
 
+  // ----- Gift 3: open ONLY ONCE (no flip back) -----
   let cardOpenedOnce = false;
 
   function openCardOnce(){
     if (cardOpenedOnce) return;
     cardOpenedOnce = true;
     loveCard.classList.add('open');
-    if (!typingState.completed) startTyping();
+    if (!typingState.completed) startTyping(); // auto type on open
   }
   loveCard.addEventListener('click', openCardOnce);
 
+  // ----- Music -----
   musicBtn.addEventListener('click', async ()=>{
     try{
       if (gift3Music.paused){
@@ -846,6 +869,7 @@
     }
   });
 
+  // ----- TYPEWRITER (Gift 3) -----
   const LETTER_TEXT =
 `Love can overcome anything
 Love can overcome anything
@@ -917,6 +941,7 @@ Love can overcome anything`;
     typingState.timer = setTimeout(step, 250);
   }
 
+  // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
     stopAndClearGifs();
     hideButtons();
