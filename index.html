@@ -357,8 +357,13 @@
       padding:14px;
       font-weight:700;
       white-space:pre-wrap;
-      min-height:140px;
       position:relative;
+    
+      /* NEW: scroll support */
+      height:190px;            /* adjust if you want more/less */
+      overflow-y:auto;
+      overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
     }
 
     .cursor{
