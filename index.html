@@ -266,8 +266,10 @@
     .driveVideo{
       width:100%;
       aspect-ratio:16/9;
+      min-height:260px; /* failsafe so it always shows */
       border:0;
       display:block;
+      background:#000;
     }
 
     /* ---------- Gift 3: Opening card animation ---------- */
@@ -495,7 +497,6 @@
           allow="autoplay; encrypted-media; fullscreen"
           allowfullscreen
           loading="lazy"
-          referrerpolicy="no-referrer"
           title="Gift 2 Video"
         ></iframe>
       </div>
@@ -785,7 +786,7 @@
 
   // ----- Modal helpers -----
   function stopGift2(){
-    // Stop Google Drive video by unloading the iframe
+    // Stop Drive video by unloading it
     if (gift2Frame) gift2Frame.src = "";
   }
 
@@ -796,7 +797,6 @@
     modalGift2.style.display = 'none';
     modalGift3.style.display = 'none';
 
-    // stop media when switching
     stopGift2();
     if (gift3Music) gift3Music.pause();
     musicBtn.textContent = "Play Music 🎶";
@@ -806,7 +806,7 @@
     if (which === 1) modalGift1.style.display = 'block';
     if (which === 2){
       modalGift2.style.display = 'block';
-      // load video only when opened (better + prevents autoplay elsewhere)
+      // Load ONLY when opened
       if (gift2Frame) gift2Frame.src = GIFT2_DRIVE_PREVIEW;
     }
     if (which === 3) modalGift3.style.display = 'block';
