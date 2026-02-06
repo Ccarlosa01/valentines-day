@@ -272,6 +272,19 @@
       background:#000;
     }
 
+    /* helper lines for Gift 2 */
+    .gift2Help{
+      font-style:italic;
+      margin-top:10px;
+      margin-bottom:0;
+    }
+    .gift2Help + .gift2Help{ margin-top:4px; }
+    .gift2Help a{
+      color:inherit;
+      text-decoration:underline;
+      font-weight:800;
+    }
+
     /* ---------- Gift 3: Opening card animation ---------- */
     .cardStage{
       margin-top:12px;
@@ -488,6 +501,16 @@
     </div>
     <div class="modalBody">
       <p id="gift2Text"></p>
+
+      <!-- ✅ Added helper lines -->
+      <p class="gift2Help">primero intenta cerrar el gift y abrirlo otra vez</p>
+      <p class="gift2Help">
+        si nada pasa... 
+        <a href="https://drive.google.com/file/d/1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ/view" target="_blank" rel="noopener">
+          presiona aqui
+        </a>
+      </p>
+
       <div class="mediaBox">
         <!-- Google Drive preview player (reliable streaming) -->
         <iframe
@@ -940,41 +963,6 @@ Love can overcome anything`;
 
     typingState.timer = setTimeout(step, 250);
   }
-
-  // ----- Main events -----
-  yesBtn.addEventListener('click', ()=>{
-    stopAndClearGifs();
-    hideButtons();
-
-    playground.style.display = 'none';
-    speechBox.style.display = 'none';
-    subtitleText.style.display = 'none';
-
-    mainCard.classList.add('giftsMode');
-    giftChoices.classList.add('show');
-  });
-
-  noBtn.addEventListener('click', ()=>{
-    if(noClicks>=10) return;
-
-    speechText.textContent = noLines[noClicks];
-    noClicks++;
-
-    if(noClicks===1) yesCentered=true;
-
-    heartPop(6);
-    positionYes();
-    spawnGif();
-
-    requestAnimationFrame(()=>moveNo());
-
-    if(noClicks===10){
-      hideNoOnly();
-    }
-  });
-
-  window.addEventListener('load', positionYes);
-  window.addEventListener('resize', positionYes);
 </script>
 
 </body>
