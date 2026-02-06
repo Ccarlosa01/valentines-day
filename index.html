@@ -73,7 +73,7 @@
 
     .gifStage{
       position:absolute;
-      inset:0;              /* EXACT same bounds as playground */
+      inset:0;
       pointer-events:none;
       z-index:0;
       border-radius:18px;
@@ -195,7 +195,7 @@
     }
     .giftBtn:hover{ transform:scale(1.01); }
 
-    /* ---------- Modal system (FIX: modal adapts; body scrolls) ---------- */
+    /* ---------- Modal system ---------- */
     .overlay{
       position:fixed;
       inset:0;
@@ -210,16 +210,12 @@
     .modal{
       width:min(92vw, 720px);
       max-height:min(86vh, 760px);
+      overflow:auto;
       background:#fff;
       border-radius:22px;
       box-shadow:0 22px 80px rgba(0,0,0,.35);
       padding:18px;
       position:relative;
-
-      /* NEW */
-      display:flex;
-      flex-direction:column;
-      overflow:hidden; /* modal itself doesn't scroll */
     }
 
     .modalHeader{
@@ -228,9 +224,6 @@
       justify-content:space-between;
       gap:12px;
       margin-bottom:10px;
-
-      /* NEW */
-      flex: 0 0 auto;
     }
     .modalTitle{
       font-size:18px;
@@ -249,16 +242,11 @@
       top:8px;
     }
 
+    /* IMPORTANT: make modal body adapt to content (no cut-offs) */
     .modalBody{
       text-align:left;
       font-size:16px;
       line-height:1.4;
-
-      /* NEW */
-      flex: 1 1 auto;
-      overflow:auto;           /* only body scrolls */
-      padding-bottom:14px;     /* room at bottom */
-      -webkit-overflow-scrolling: touch;
     }
 
     .mediaBox{
@@ -268,143 +256,120 @@
       background:#fff0f4;
       border:1px solid rgba(0,0,0,.10);
     }
-    .mediaBox img{
-      width:100%;
-      display:block;
-      height:auto;
-    }
-    .mediaBox video{
-      width:100%;
-      display:block;
-    }
+    .mediaBox img{ width:100%; display:block; height:auto; }
+    .mediaBox video{ width:100%; display:block; }
 
-    /* ---------- Gift 3: Envelope + letter (realistic) ---------- */
-    .envStage{
-      margin-top:14px;
+    /* ---------- Gift 3: Card animation ---------- */
+    .cardStage{
+      margin-top:12px;
       display:grid;
       place-items:center;
-
-      /* NEW: prevent it from forcing overflow */
-      padding-bottom:6px;
     }
 
-    .envelope{
-      width:min(560px, 94%);
-      /* NEW: responsive height so button doesn't get cut off */
-      height:clamp(300px, 55vh, 380px);
+    .loveCard{
+      width:min(520px, 92%);
+      height:320px;
+      perspective:1200px;
       position:relative;
       cursor:pointer;
       user-select:none;
     }
 
-    .envBack{
+    .cardInner{
       position:absolute;
       inset:0;
-      background:#fff;
+      transform-style:preserve-3d;
+      transition: transform 900ms cubic-bezier(.2,.8,.2,1);
       border-radius:18px;
+    }
+
+    .loveCard.open .cardInner{
+      transform: rotateY(-160deg);
+    }
+
+    .cardFront, .cardBack{
+      position:absolute;
+      inset:0;
+      border-radius:18px;
+      backface-visibility:hidden;
+      overflow:hidden;
       border:2px solid rgba(0,0,0,.12);
       box-shadow:0 18px 40px rgba(0,0,0,.18);
-      overflow:hidden;
     }
 
-    .envPocket{
-      position:absolute;
-      left:0; right:0; bottom:0;
-      height:58%;
-      background:linear-gradient(135deg,#ffd1dc,#ffb3c1);
-      border-bottom-left-radius:18px;
-      border-bottom-right-radius:18px;
-      border-top:2px solid rgba(0,0,0,.08);
-    }
-
-    .envPocket::before{
-      content:"";
-      position:absolute;
-      left:0; right:0; top:-2px; bottom:0;
-      clip-path:polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%);
-      background:rgba(255,255,255,.25);
-      pointer-events:none;
-    }
-
-    .envFlap{
-      position:absolute;
-      left:0; right:0; top:0;
-      height:62%;
-      background:linear-gradient(135deg,#ff7aa5,#ffd1dc);
-      clip-path:polygon(0 0, 100% 0, 50% 82%);
-      transform-origin:top center;
-      transform:rotateX(0deg);
-      transition:transform 900ms cubic-bezier(.2,.9,.2,1);
-      filter: drop-shadow(0 8px 14px rgba(0,0,0,.12));
-    }
-
-    .seal{
-      position:absolute;
-      left:50%; top:56%;
-      transform:translate(-50%,-50%);
-      width:44px; height:44px;
-      border-radius:999px;
-      background:#ff2e63;
-      box-shadow:0 10px 20px rgba(0,0,0,.15);
+    .cardFront{
+      background:linear-gradient(135deg, #ff7aa5, #ffd1dc);
       display:grid;
       place-items:center;
-      color:#fff;
-      font-weight:1000;
-      z-index:3;
+      padding:18px;
+      text-align:center;
+      position:relative;
     }
 
-    .letter{
+    .cardFront h3{
+      margin:0;
+      font-size:22px;
+      font-weight:1000;
+      color:#111;
+      text-shadow:0 2px 0 rgba(255,255,255,.35);
+    }
+    .cardFront p{
+      margin:8px 0 0;
+      font-weight:900;
+      opacity:.85;
+    }
+
+    /* clickable heart that disappears on open */
+    .openHeart{
       position:absolute;
       left:50%;
       bottom:18px;
-      transform:translateX(-50%) translateY(160px);
-      width:92%;
-      /* NEW: responsive to modal height */
-      height:clamp(220px, 42vh, 285px);
+      transform:translateX(-50%);
+      width:54px;
+      height:54px;
+      border-radius:999px;
+      background:#ff2e63;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      font-size:26px;
+      font-weight:1000;
+      box-shadow:0 12px 26px rgba(0,0,0,.18);
+      transition: transform .18s ease, opacity .18s ease;
+      cursor:pointer;
+    }
+    .openHeart:hover{ transform:translateX(-50%) scale(1.06); }
+    .openHeart.hidden{ opacity:0; transform:translateX(-50%) scale(.85); pointer-events:none; }
+
+    .cardBack{
       background:#fff;
-      border-radius:14px;
-      border:1px solid rgba(0,0,0,.10);
-      box-shadow:0 12px 26px rgba(0,0,0,.16);
-      transition:transform 900ms cubic-bezier(.2,.9,.2,1);
-      z-index:1;
-      overflow:hidden;
+      transform: rotateY(180deg);
+      padding:12px; /* keep a little padding */
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
 
-    .letter::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        linear-gradient(transparent 0 26px, rgba(0,0,0,.05) 27px) 0 0 / 100% 28px;
-      opacity:.45;
-      pointer-events:none;
-    }
-
+    /* Make the letter text use the full width */
     .letterPaper{
-      position:relative;
-      z-index:2;
-      margin:14px;
+      width:100%;
+      margin:0;
       background:#fff0f4;
       border:1px solid rgba(0,0,0,.10);
-      border-radius:12px;
-      padding:14px;
-      font-weight:750;
+      border-radius:16px;
+      padding:16px;
+      font-weight:700;
       white-space:pre-wrap;
-      min-height:210px;
-    }
-
-    .envelope.open .envFlap{
-      transform:rotateX(165deg);
-    }
-    .envelope.open .letter{
-      transform:translateX(-50%) translateY(-14px);
+      min-height:180px;
+      position:relative;
     }
 
     .musicRow{
-      margin-top:12px;
       display:flex;
       justify-content:center;
+      padding-bottom:2px;
     }
+
     .miniBtn{
       border:0;
       border-radius:999px;
@@ -465,7 +430,6 @@
 </head>
 
 <body>
-
 <main class="card" id="mainCard">
 
   <div class="textzone">
@@ -542,7 +506,7 @@
     </div>
   </div>
 
-  <!-- Gift 3 Modal (ENVELOPE) -->
+  <!-- Gift 3 Modal -->
   <div class="modal" id="modalGift3" style="display:none;">
     <div class="modalHeader">
       <h3 class="modalTitle">💌 Regalo #3</h3>
@@ -550,24 +514,32 @@
     </div>
 
     <div class="modalBody">
-      <div class="envStage">
-        <div class="envelope" id="envelope">
-          <div class="envBack"></div>
-          <div class="envFlap"></div>
-          <div class="envPocket"></div>
-          <div class="seal">❤</div>
-          <div class="letter">
-            <div class="letterPaper" id="gift3Letter"></div>
+      <div class="cardStage">
+        <div class="loveCard" id="loveCard">
+          <div class="cardInner">
+            <div class="cardFront">
+              <div>
+                <h3>Para ti 🩺💘</h3>
+                <p>(click the heart)</p>
+              </div>
+
+              <!-- clickable heart that disappears -->
+              <div class="openHeart" id="openHeart" aria-label="Open card">❤</div>
+            </div>
+
+            <div class="cardBack">
+              <div class="letterPaper" id="gift3Letter"></div>
+
+              <div class="musicRow">
+                <button class="miniBtn" id="musicBtn">Play Music 🎶</button>
+              </div>
+
+              <audio id="gift3Music" preload="auto" loop>
+                <source src="love.mp3" type="audio/mpeg">
+              </audio>
+            </div>
           </div>
         </div>
-
-        <div class="musicRow">
-          <button class="miniBtn" id="musicBtn">Play Music 🎶</button>
-        </div>
-
-        <audio id="gift3Music" preload="auto" loop>
-          <source src="love.mp3" type="audio/mpeg">
-        </audio>
       </div>
     </div>
   </div>
@@ -595,11 +567,12 @@
   const modalGift2 = document.getElementById('modalGift2');
   const modalGift3 = document.getElementById('modalGift3');
 
+  const loveCard = document.getElementById('loveCard');
+  const openHeart = document.getElementById('openHeart');
   const musicBtn = document.getElementById('musicBtn');
   const gift3Music = document.getElementById('gift3Music');
   const gift2Video = document.getElementById('gift2Video');
   const gift3Letter = document.getElementById('gift3Letter');
-  const envelope = document.getElementById('envelope');
 
   // Gift text nodes
   const gift1TextEl = document.getElementById('gift1Text');
@@ -632,6 +605,7 @@
   let noClicks = 0;
   let yesCentered = false;
 
+  // ----- Hearts pop -----
   function heartPop(n=6){
     for(let i=0;i<n;i++){
       const h=document.createElement('div');
@@ -644,8 +618,8 @@
     }
   }
 
+  // ----- YES scaling/position -----
   function yesScale(){ return Math.min(3.2,1+noClicks*.16); }
-
   function positionYes(){
     const s=yesScale();
     if(!yesCentered){
@@ -659,13 +633,13 @@
     }
   }
 
+  // ----- NO move -----
   function moveNo(){
     if (noBtn.style.display === 'none') return;
 
     const pad=12;
-    const W = playground.clientWidth;
-    const H = playground.clientHeight;
-
+    const W=playground.clientWidth;
+    const H=playground.clientHeight;
     const nw=noBtn.offsetWidth;
     const nh=noBtn.offsetHeight;
 
@@ -710,14 +684,10 @@
   let rafId=null;
   let running=true;
 
-  function rand(min,max){ return Math.random()*(max-min)+min }
+  function rand(min,max){ return Math.random()*(max-min)+min; }
   function randNonZero(min,max){
     const v = rand(min,max);
     return Math.random()<.5 ? -v : v;
-  }
-
-  function getBounds(){
-    return { W: playground.clientWidth, H: playground.clientHeight };
   }
 
   function spawnGif(){
@@ -729,15 +699,15 @@
 
     const img=document.createElement('img');
     img.className='gifSprite';
-    img.src=gifQueue[gifIndex++]+'?v='+Date.now();
+    img.src=gifQueue[gifIndex++] + '?v=' + Date.now();
     img.style.transform=`scale(${GIF_SCALE})`;
 
     wrap.appendChild(img);
     gifStage.appendChild(wrap);
 
     img.onload=()=>{
-      const { W, H } = getBounds();
-
+      const W=playground.clientWidth;
+      const H=playground.clientHeight;
       const w=img.naturalWidth*GIF_SCALE;
       const h=img.naturalHeight*GIF_SCALE;
 
@@ -746,8 +716,8 @@
         x:(W-w)/2,
         y:(H-h)/2,
         w,h,
-        vx:randNonZero(0.45,0.95),
-        vy:randNonZero(0.40,0.90)
+        vx:randNonZero(0.6,1.2),
+        vy:randNonZero(0.5,1.1)
       };
 
       s.x = Math.max(0, Math.min(s.x, W - s.w));
@@ -767,7 +737,8 @@
       return;
     }
 
-    const { W, H } = getBounds();
+    const W=playground.clientWidth;
+    const H=playground.clientHeight;
 
     for(const s of sprites){
       if(!s.wrap.isConnected) continue;
@@ -794,14 +765,14 @@
     gifStage.innerHTML="";
   }
 
-  // ----- OPENING FX -----
+  // ----- OPENING FX (play sound + animate face.png, then open gift) -----
   function playOpeningFxThen(openGiftFn){
     if (fxRunning) return;
     fxRunning = true;
 
     openFx.classList.add('show');
     openFx.classList.remove('run');
-    void openFx.offsetHeight;
+    void openFx.offsetHeight; // reset animation
     openFx.classList.add('run');
 
     try{
@@ -818,63 +789,7 @@
     }, 2000);
   }
 
-  // ----- Modal helpers -----
-  function resetGift3(){
-    envelope.classList.remove('open');
-    cardOpenedOnce = false;
-    stopTyping(true);
-    gift3Letter.textContent = "";
-    if (gift3Music) gift3Music.pause();
-    musicBtn.textContent = "Play Music 🎶";
-  }
-
-  function openModal(which){
-    overlay.classList.add('show');
-
-    modalGift1.style.display = 'none';
-    modalGift2.style.display = 'none';
-    modalGift3.style.display = 'none';
-
-    if (gift2Video) gift2Video.pause();
-
-    if (which === 1) modalGift1.style.display = 'block';
-    if (which === 2) modalGift2.style.display = 'block';
-    if (which === 3){
-      resetGift3();
-      modalGift3.style.display = 'block';
-    }
-  }
-
-  function closeModal(){
-    overlay.classList.remove('show');
-
-    modalGift1.style.display = 'none';
-    modalGift2.style.display = 'none';
-    modalGift3.style.display = 'none';
-
-    if (gift2Video) gift2Video.pause();
-    resetGift3();
-  }
-
-  overlay.addEventListener('click', (e)=>{
-    if (e.target === overlay) closeModal();
-  });
-
-  document.addEventListener('click', (e)=>{
-    if (e.target && e.target.matches('[data-close]')) closeModal();
-  });
-
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape') closeModal();
-  });
-
-  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
-  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
-  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
-
   // ----- Gift 3 typing -----
-  let cardOpenedOnce = false;
-
   const LETTER_TEXT =
 `Love can overcome anything
 Love can overcome anything
@@ -945,17 +860,90 @@ Love can overcome anything`;
       typingState.timer = setTimeout(step, delay);
     }
 
-    typingState.timer = setTimeout(step, 300);
+    typingState.timer = setTimeout(step, 250);
   }
 
-  function openEnvelopeOnce(){
+  // ----- Modal helpers -----
+  let cardOpenedOnce = false;
+
+  function resetGift3(){
+    cardOpenedOnce = false;
+    loveCard.classList.remove('open');
+    openHeart.classList.remove('hidden');
+    stopTyping(true);
+    gift3Letter.textContent = "";
+    if (gift3Music) gift3Music.pause();
+    musicBtn.textContent = "Play Music 🎶";
+  }
+
+  function openModal(which){
+    overlay.classList.add('show');
+
+    modalGift1.style.display = 'none';
+    modalGift2.style.display = 'none';
+    modalGift3.style.display = 'none';
+
+    if (gift2Video) gift2Video.pause();
+
+    if (which === 1) modalGift1.style.display = 'block';
+    if (which === 2) modalGift2.style.display = 'block';
+    if (which === 3){
+      resetGift3();
+      modalGift3.style.display = 'block';
+    }
+  }
+
+  function closeModal(){
+    overlay.classList.remove('show');
+
+    modalGift1.style.display = 'none';
+    modalGift2.style.display = 'none';
+    modalGift3.style.display = 'none';
+
+    if (gift2Video) gift2Video.pause();
+    resetGift3();
+  }
+
+  overlay.addEventListener('click', (e)=>{
+    if (e.target === overlay) closeModal();
+  });
+
+  document.addEventListener('click', (e)=>{
+    if (e.target && e.target.matches('[data-close]')) closeModal();
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Gift clicks -> play FX then open
+  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
+  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
+  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
+
+  // ----- Gift 3: open ONLY ONCE via HEART; heart disappears -----
+  function openCardOnce(){
     if (cardOpenedOnce) return;
     cardOpenedOnce = true;
-    envelope.classList.add('open');
-    setTimeout(startTyping, 650);
-  }
-  envelope.addEventListener('click', openEnvelopeOnce);
 
+    openHeart.classList.add('hidden');   // ✅ heart disappears
+    loveCard.classList.add('open');
+
+    // start typing after the flip begins
+    setTimeout(startTyping, 350);
+  }
+
+  openHeart.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    openCardOnce();
+  });
+
+  // (optional) also allow clicking anywhere on the card to open
+  loveCard.addEventListener('click', ()=>{
+    if (!cardOpenedOnce) openCardOnce();
+  });
+
+  // ----- Music -----
   musicBtn.addEventListener('click', async ()=>{
     try{
       if (gift3Music.paused){
@@ -1003,9 +991,7 @@ Love can overcome anything`;
   });
 
   window.addEventListener('load', positionYes);
-  window.addEventListener('resize', ()=>{
-    positionYes();
-  });
+  window.addEventListener('resize', positionYes);
 </script>
 
 </body>
