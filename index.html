@@ -73,7 +73,7 @@
 
     .gifStage{
       position:absolute;
-      inset:0;
+      inset:0;              /* IMPORTANT: EXACT same bounds as playground */
       pointer-events:none;
       z-index:0;
       border-radius:18px;
@@ -242,7 +242,6 @@
       top:8px;
     }
 
-    /* IMPORTANT: make modal body adapt to content (no cut-offs) */
     .modalBody{
       text-align:left;
       font-size:16px;
@@ -256,107 +255,138 @@
       background:#fff0f4;
       border:1px solid rgba(0,0,0,.10);
     }
-    .mediaBox img{ width:100%; display:block; height:auto; }
-    .mediaBox video{ width:100%; display:block; }
+    .mediaBox img{
+      width:100%;
+      display:block;
+      height:auto;
+    }
+    .mediaBox video{
+      width:100%;
+      display:block;
+    }
 
-    /* ---------- Gift 3: Card animation ---------- */
-    .cardStage{
-      margin-top:12px;
+    /* ---------- Gift 3: Envelope + letter (realistic) ---------- */
+    .envStage{
+      margin-top:14px;
       display:grid;
       place-items:center;
     }
 
-    .loveCard{
-      width:min(520px, 92%);
-      height:320px;
-      perspective:1200px;
+    .envelope{
+      width:min(560px, 94%);
+      height:360px;
       position:relative;
       cursor:pointer;
       user-select:none;
     }
 
-    .cardInner{
+    .envBack{
       position:absolute;
       inset:0;
-      transform-style:preserve-3d;
-      transition: transform 900ms cubic-bezier(.2,.8,.2,1);
+      background:#fff;
       border-radius:18px;
-    }
-
-    .loveCard.open .cardInner{
-      transform: rotateY(-160deg);
-    }
-
-    .cardFront, .cardBack{
-      position:absolute;
-      inset:0;
-      border-radius:18px;
-      backface-visibility:hidden;
-      overflow:hidden;
       border:2px solid rgba(0,0,0,.12);
       box-shadow:0 18px 40px rgba(0,0,0,.18);
+      overflow:hidden;
     }
 
-    .cardFront{
-      background:linear-gradient(135deg, #ff7aa5, #ffd1dc);
+    .envPocket{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:58%;
+      background:linear-gradient(135deg,#ffd1dc,#ffb3c1);
+      border-bottom-left-radius:18px;
+      border-bottom-right-radius:18px;
+      border-top:2px solid rgba(0,0,0,.08);
+    }
+
+    .envPocket::before{
+      content:"";
+      position:absolute;
+      left:0; right:0; top:-2px; bottom:0;
+      clip-path:polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%);
+      background:rgba(255,255,255,.25);
+      pointer-events:none;
+    }
+
+    .envFlap{
+      position:absolute;
+      left:0; right:0; top:0;
+      height:62%;
+      background:linear-gradient(135deg,#ff7aa5,#ffd1dc);
+      clip-path:polygon(0 0, 100% 0, 50% 82%);
+      transform-origin:top center;
+      transform:rotateX(0deg);
+      transition:transform 900ms cubic-bezier(.2,.9,.2,1);
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.12));
+    }
+
+    .seal{
+      position:absolute;
+      left:50%; top:56%;
+      transform:translate(-50%,-50%);
+      width:44px; height:44px;
+      border-radius:999px;
+      background:#ff2e63;
+      box-shadow:0 10px 20px rgba(0,0,0,.15);
       display:grid;
       place-items:center;
-      padding:18px;
-      text-align:center;
-      position:relative;
-    }
-
-    .cardFront h3{
-      margin:0;
-      font-size:22px;
+      color:#fff;
       font-weight:1000;
-      color:#111;
-      text-shadow:0 2px 0 rgba(255,255,255,.35);
-    }
-    .cardFront p{
-      margin:8px 0 0;
-      font-weight:900;
-      opacity:.85;
+      z-index:3;
     }
 
-    .cardBack{
+    .letter{
+      position:absolute;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%) translateY(160px);
+      width:92%;
+      height:285px;
       background:#fff;
-      transform: rotateY(180deg);
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    
-      /* NEW: center contents on the white back */
-      align-items:center;
-      justify-content:center;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.10);
+      box-shadow:0 12px 26px rgba(0,0,0,.16);
+      transition:transform 900ms cubic-bezier(.2,.9,.2,1);
+      z-index:1;
+      overflow:hidden;
     }
-    
+
+    .letter::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(transparent 0 26px, rgba(0,0,0,.05) 27px) 0 0 / 100% 28px;
+      opacity:.45;
+      pointer-events:none;
+    }
+
     .letterPaper{
-      /* NEW: centered + not full-bleed */
-      width:min(460px, 100%);
-      margin:0 auto;
-    
+      position:relative;
+      z-index:2;
+      margin:14px;
       background:#fff0f4;
       border:1px solid rgba(0,0,0,.10);
-      border-radius:16px;
-      padding:18px;
-      font-weight:700;
+      border-radius:12px;
+      padding:14px;
+      font-weight:750;
       white-space:pre-wrap;
-    
-      /* NEW: taller pink area */
-      min-height:240px;
-    
-      position:relative;
+      min-height:210px;
     }
 
+    .envelope.open .envFlap{
+      transform:rotateX(165deg);
+    }
+    .envelope.open .letter{
+      transform:translateX(-50%) translateY(-14px);
+    }
 
     .musicRow{
+      margin-top:12px;
       display:flex;
       justify-content:center;
-      padding-bottom:2px;
     }
-
     .miniBtn{
       border:0;
       border-radius:999px;
@@ -417,13 +447,14 @@
 </head>
 
 <body>
+
 <main class="card" id="mainCard">
 
   <div class="textzone">
     <h1>Para la futura Doctora...te gustaria ser mi San Valentin 🫶</h1>
 
     <p id="subtitleText">
-      Esta bien si quieres romper mi corazoncito de pollito 😞
+      Esta bien si quieres romper mi coranzoncito de pollito 😞
     </p>
 
     <div class="speech" id="speechBox">
@@ -493,7 +524,7 @@
     </div>
   </div>
 
-  <!-- Gift 3 Modal -->
+  <!-- Gift 3 Modal (ENVELOPE) -->
   <div class="modal" id="modalGift3" style="display:none;">
     <div class="modalHeader">
       <h3 class="modalTitle">💌 Regalo #3</h3>
@@ -501,29 +532,24 @@
     </div>
 
     <div class="modalBody">
-      <div class="cardStage">
-        <div class="loveCard" id="loveCard">
-          <div class="cardInner">
-            <div class="cardFront">
-              <div>
-                <h3>Para ti 🩺💘</h3>
-                <p>(tap the card)</p>
-              </div>
-            </div>
-
-            <div class="cardBack">
-              <div class="letterPaper" id="gift3Letter"></div>
-
-              <div class="musicRow">
-                <button class="miniBtn" id="musicBtn">Play Music 🎶</button>
-              </div>
-
-              <audio id="gift3Music" preload="auto" loop>
-                <source src="love.mp3" type="audio/mpeg">
-              </audio>
-            </div>
+      <div class="envStage">
+        <div class="envelope" id="envelope">
+          <div class="envBack"></div>
+          <div class="envFlap"></div>
+          <div class="envPocket"></div>
+          <div class="seal">❤</div>
+          <div class="letter">
+            <div class="letterPaper" id="gift3Letter"></div>
           </div>
         </div>
+
+        <div class="musicRow">
+          <button class="miniBtn" id="musicBtn">Play Music 🎶</button>
+        </div>
+
+        <audio id="gift3Music" preload="auto" loop>
+          <source src="love.mp3" type="audio/mpeg">
+        </audio>
       </div>
     </div>
   </div>
@@ -551,11 +577,11 @@
   const modalGift2 = document.getElementById('modalGift2');
   const modalGift3 = document.getElementById('modalGift3');
 
-  const loveCard = document.getElementById('loveCard');
   const musicBtn = document.getElementById('musicBtn');
   const gift3Music = document.getElementById('gift3Music');
   const gift2Video = document.getElementById('gift2Video');
   const gift3Letter = document.getElementById('gift3Letter');
+  const envelope = document.getElementById('envelope');
 
   // Gift text nodes
   const gift1TextEl = document.getElementById('gift1Text');
@@ -588,7 +614,6 @@
   let noClicks = 0;
   let yesCentered = false;
 
-  // ----- Hearts pop -----
   function heartPop(n=6){
     for(let i=0;i<n;i++){
       const h=document.createElement('div');
@@ -601,8 +626,8 @@
     }
   }
 
-  // ----- YES scaling/position -----
   function yesScale(){ return Math.min(3.2,1+noClicks*.16); }
+
   function positionYes(){
     const s=yesScale();
     if(!yesCentered){
@@ -616,13 +641,15 @@
     }
   }
 
-  // ----- NO move -----
   function moveNo(){
     if (noBtn.style.display === 'none') return;
 
     const pad=12;
-    const W=playground.clientWidth;
-    const H=playground.clientHeight;
+
+    // IMPORTANT: same boundary element for NO + GIFS = playground inner box
+    const W = playground.clientWidth;
+    const H = playground.clientHeight;
+
     const nw=noBtn.offsetWidth;
     const nh=noBtn.offsetHeight;
 
@@ -667,10 +694,17 @@
   let rafId=null;
   let running=true;
 
-  function rand(min,max){ return Math.random()*(max-min)+min; }
+  function rand(min,max){ return Math.random()*(max-min)+min }
   function randNonZero(min,max){
     const v = rand(min,max);
     return Math.random()<.5 ? -v : v;
+  }
+
+  function getBounds(){
+    // EXACTLY the same content box as the NO button:
+    // gifStage is inset:0 inside playground, so sizes match
+    // Use playground for authoritative boundaries.
+    return { W: playground.clientWidth, H: playground.clientHeight };
   }
 
   function spawnGif(){
@@ -682,15 +716,15 @@
 
     const img=document.createElement('img');
     img.className='gifSprite';
-    img.src=gifQueue[gifIndex++] + '?v=' + Date.now();
+    img.src=gifQueue[gifIndex++]+'?v='+Date.now();
     img.style.transform=`scale(${GIF_SCALE})`;
 
     wrap.appendChild(img);
     gifStage.appendChild(wrap);
 
     img.onload=()=>{
-      const W=playground.clientWidth;
-      const H=playground.clientHeight;
+      const { W, H } = getBounds();
+
       const w=img.naturalWidth*GIF_SCALE;
       const h=img.naturalHeight*GIF_SCALE;
 
@@ -699,10 +733,12 @@
         x:(W-w)/2,
         y:(H-h)/2,
         w,h,
-        vx:randNonZero(0.6,1.2),
-        vy:randNonZero(0.5,1.1)
+        // slightly slower
+        vx:randNonZero(0.45,0.95),
+        vy:randNonZero(0.40,0.90)
       };
 
+      // clamp to boundary
       s.x = Math.max(0, Math.min(s.x, W - s.w));
       s.y = Math.max(0, Math.min(s.y, H - s.h));
 
@@ -720,8 +756,7 @@
       return;
     }
 
-    const W=playground.clientWidth;
-    const H=playground.clientHeight;
+    const { W, H } = getBounds();
 
     for(const s of sprites){
       if(!s.wrap.isConnected) continue;
@@ -729,6 +764,7 @@
       s.x+=s.vx;
       s.y+=s.vy;
 
+      // HARD boundary: gif edges never leave playground
       if(s.x<=0){ s.x=0; s.vx*=-1; }
       if(s.y<=0){ s.y=0; s.vy*=-1; }
       if(s.x+s.w>=W){ s.x=Math.max(0,W-s.w); s.vx*=-1; }
@@ -755,7 +791,7 @@
 
     openFx.classList.add('show');
     openFx.classList.remove('run');
-    void openFx.offsetHeight; // reset animation
+    void openFx.offsetHeight;
     openFx.classList.add('run');
 
     try{
@@ -772,9 +808,71 @@
     }, 2000);
   }
 
-  // ----- Gift 3 typing -----
+  // ----- Modal helpers -----
+  function resetGift3(){
+    envelope.classList.remove('open');
+    cardOpenedOnce = false;
+    stopTyping(true);
+    gift3Letter.textContent = "";
+    if (gift3Music) gift3Music.pause();
+    musicBtn.textContent = "Play Music 🎶";
+  }
+
+  function openModal(which){
+    overlay.classList.add('show');
+
+    modalGift1.style.display = 'none';
+    modalGift2.style.display = 'none';
+    modalGift3.style.display = 'none';
+
+    if (gift2Video) gift2Video.pause();
+
+    if (which === 1) modalGift1.style.display = 'block';
+    if (which === 2) modalGift2.style.display = 'block';
+    if (which === 3){
+      resetGift3();
+      modalGift3.style.display = 'block';
+    }
+  }
+
+  function closeModal(){
+    overlay.classList.remove('show');
+
+    modalGift1.style.display = 'none';
+    modalGift2.style.display = 'none';
+    modalGift3.style.display = 'none';
+
+    if (gift2Video) gift2Video.pause();
+    resetGift3();
+  }
+
+  overlay.addEventListener('click', (e)=>{
+    if (e.target === overlay) closeModal();
+  });
+
+  document.addEventListener('click', (e)=>{
+    if (e.target && e.target.matches('[data-close]')) closeModal();
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // Gift clicks -> play FX then open
+  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
+  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
+  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
+
+  // ----- Gift 3: open ONLY ONCE + auto type AFTER open -----
+  let cardOpenedOnce = false;
+
   const LETTER_TEXT =
-`Love can overcome anything Love can overcome anything Love can overcome anything Love can overcome anything Love can overcome anything Love can overcome anything`;
+`Love can overcome anything
+Love can overcome anything
+Love can overcome anything
+Love can overcome anything
+Love can overcome anything
+Love can overcome anything`;
 
   const typingState = {
     timer: null,
@@ -838,78 +936,20 @@
       typingState.timer = setTimeout(step, delay);
     }
 
-    typingState.timer = setTimeout(step, 250);
+    typingState.timer = setTimeout(step, 300);
   }
 
-  // ----- Modal helpers -----
-  let cardOpenedOnce = false;
-
-  function resetGift3(){
-    cardOpenedOnce = false;
-    loveCard.classList.remove('open');
-    stopTyping(true);
-    gift3Letter.textContent = "";
-    if (gift3Music) gift3Music.pause();
-    musicBtn.textContent = "Play Music 🎶";
-  }
-
-  function openModal(which){
-    overlay.classList.add('show');
-
-    modalGift1.style.display = 'none';
-    modalGift2.style.display = 'none';
-    modalGift3.style.display = 'none';
-
-    if (gift2Video) gift2Video.pause();
-
-    if (which === 1) modalGift1.style.display = 'block';
-    if (which === 2) modalGift2.style.display = 'block';
-    if (which === 3){
-      resetGift3();
-      modalGift3.style.display = 'block';
-    }
-  }
-
-  function closeModal(){
-    overlay.classList.remove('show');
-
-    modalGift1.style.display = 'none';
-    modalGift2.style.display = 'none';
-    modalGift3.style.display = 'none';
-
-    if (gift2Video) gift2Video.pause();
-    resetGift3();
-  }
-
-  overlay.addEventListener('click', (e)=>{
-    if (e.target === overlay) closeModal();
-  });
-
-  document.addEventListener('click', (e)=>{
-    if (e.target && e.target.matches('[data-close]')) closeModal();
-  });
-
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape') closeModal();
-  });
-
-  // Gift clicks -> play FX then open
-  gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
-  gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
-  gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
-
-  // ----- Gift 3: open ONLY ONCE via CARD TAP -----
-  function openCardOnce(){
+  function openEnvelopeOnce(){
     if (cardOpenedOnce) return;
     cardOpenedOnce = true;
+    envelope.classList.add('open');
 
-    loveCard.classList.add('open');
-    setTimeout(startTyping, 350);
+    // Start typing after the letter begins sliding out
+    setTimeout(startTyping, 650);
   }
+  envelope.addEventListener('click', openEnvelopeOnce);
 
-  loveCard.addEventListener('click', openCardOnce);
-
-  // ----- Music -----
+  // ----- Music button (manual toggle) -----
   musicBtn.addEventListener('click', async ()=>{
     try{
       if (gift3Music.paused){
@@ -926,7 +966,6 @@
 
   // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
-    heartPop(6);
     stopAndClearGifs();
     hideButtons();
 
@@ -946,6 +985,7 @@
 
     if(noClicks===1) yesCentered=true;
 
+    heartPop(6);
     positionYes();
     spawnGif();
 
@@ -957,7 +997,10 @@
   });
 
   window.addEventListener('load', positionYes);
-  window.addEventListener('resize', positionYes);
+  window.addEventListener('resize', ()=>{
+    positionYes();
+    // keep gifs inside after resize by clamping next frame
+  });
 </script>
 
 </body>
