@@ -499,7 +499,7 @@
     </div>
 
     <div class="modalBody">
-      <p style="margin-top:0;">Haz click en la tarjeta para abrirla 😌 (solo se abre una vez)</p>
+      <!-- removed the two helper texts here -->
 
       <div class="cardStage">
         <div class="loveCard" id="loveCard">
@@ -514,8 +514,7 @@
               <div class="letterPaper" id="gift3Letter"></div>
 
               <div class="cardControls">
-                <button class="miniBtn secondary" id="typeBtn">Type / Replay ⌨️</button>
-                <button class="miniBtn secondary" id="skipBtn">Skip ⏭</button>
+                <!-- removed Type/Replay and Skip buttons -->
                 <button class="miniBtn secondary" id="musicBtn">Play Music 🎶</button>
               </div>
 
@@ -527,9 +526,7 @@
         </div>
       </div>
 
-      <p style="opacity:.75; margin-bottom:0;">
-        Nota: el audio solo puede empezar cuando ella hace click (por el navegador).
-      </p>
+      <!-- removed the note text here -->
     </div>
   </div>
 
@@ -557,8 +554,6 @@
   const modalGift3 = document.getElementById('modalGift3');
 
   const loveCard = document.getElementById('loveCard');
-  const typeBtn = document.getElementById('typeBtn');
-  const skipBtn = document.getElementById('skipBtn');
   const musicBtn = document.getElementById('musicBtn');
   const gift3Music = document.getElementById('gift3Music');
   const gift2Video = document.getElementById('gift2Video');
@@ -696,10 +691,12 @@
     gifStage.appendChild(wrap);
 
     img.onload=()=>{
-      const w=img.naturalWidth*GIF_SCALE;
-      const h=img.naturalHeight*GIF_SCALE;
+      // IMPORTANT: use the *playground* as the true boundary
       const W=playground.clientWidth;
       const H=playground.clientHeight;
+
+      const w=img.naturalWidth*GIF_SCALE;
+      const h=img.naturalHeight*GIF_SCALE;
 
       const s={
         wrap,
@@ -836,7 +833,7 @@
     if (cardOpenedOnce) return;
     cardOpenedOnce = true;
     loveCard.classList.add('open');
-    if (!typingState.completed) startTyping();
+    if (!typingState.completed) startTyping(); // auto type on open
   }
   loveCard.addEventListener('click', openCardOnce);
 
@@ -926,15 +923,6 @@ Love can overcome anything`;
 
     typingState.timer = setTimeout(step, 250);
   }
-
-  function skipTyping(){
-    stopTyping(false);
-    typingState.completed = true;
-    renderLetterText(LETTER_TEXT);
-  }
-
-  typeBtn.addEventListener('click', startTyping);
-  skipBtn.addEventListener('click', skipTyping);
 
   // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
