@@ -73,7 +73,7 @@
 
     .gifStage{
       position:absolute;
-      inset:0;              /* IMPORTANT: EXACT same bounds as playground */
+      inset:0;              /* EXACT same bounds as playground */
       pointer-events:none;
       z-index:0;
       border-radius:18px;
@@ -195,7 +195,7 @@
     }
     .giftBtn:hover{ transform:scale(1.01); }
 
-    /* ---------- Modal system ---------- */
+    /* ---------- Modal system (FIX: modal adapts; body scrolls) ---------- */
     .overlay{
       position:fixed;
       inset:0;
@@ -210,12 +210,16 @@
     .modal{
       width:min(92vw, 720px);
       max-height:min(86vh, 760px);
-      overflow:auto;
       background:#fff;
       border-radius:22px;
       box-shadow:0 22px 80px rgba(0,0,0,.35);
       padding:18px;
       position:relative;
+
+      /* NEW */
+      display:flex;
+      flex-direction:column;
+      overflow:hidden; /* modal itself doesn't scroll */
     }
 
     .modalHeader{
@@ -224,6 +228,9 @@
       justify-content:space-between;
       gap:12px;
       margin-bottom:10px;
+
+      /* NEW */
+      flex: 0 0 auto;
     }
     .modalTitle{
       font-size:18px;
@@ -246,6 +253,12 @@
       text-align:left;
       font-size:16px;
       line-height:1.4;
+
+      /* NEW */
+      flex: 1 1 auto;
+      overflow:auto;           /* only body scrolls */
+      padding-bottom:14px;     /* room at bottom */
+      -webkit-overflow-scrolling: touch;
     }
 
     .mediaBox{
@@ -270,11 +283,15 @@
       margin-top:14px;
       display:grid;
       place-items:center;
+
+      /* NEW: prevent it from forcing overflow */
+      padding-bottom:6px;
     }
 
     .envelope{
       width:min(560px, 94%);
-      height:360px;
+      /* NEW: responsive height so button doesn't get cut off */
+      height:clamp(300px, 55vh, 380px);
       position:relative;
       cursor:pointer;
       user-select:none;
@@ -342,7 +359,8 @@
       bottom:18px;
       transform:translateX(-50%) translateY(160px);
       width:92%;
-      height:285px;
+      /* NEW: responsive to modal height */
+      height:clamp(220px, 42vh, 285px);
       background:#fff;
       border-radius:14px;
       border:1px solid rgba(0,0,0,.10);
@@ -645,8 +663,6 @@
     if (noBtn.style.display === 'none') return;
 
     const pad=12;
-
-    // IMPORTANT: same boundary element for NO + GIFS = playground inner box
     const W = playground.clientWidth;
     const H = playground.clientHeight;
 
@@ -701,9 +717,6 @@
   }
 
   function getBounds(){
-    // EXACTLY the same content box as the NO button:
-    // gifStage is inset:0 inside playground, so sizes match
-    // Use playground for authoritative boundaries.
     return { W: playground.clientWidth, H: playground.clientHeight };
   }
 
@@ -733,12 +746,10 @@
         x:(W-w)/2,
         y:(H-h)/2,
         w,h,
-        // slightly slower
         vx:randNonZero(0.45,0.95),
         vy:randNonZero(0.40,0.90)
       };
 
-      // clamp to boundary
       s.x = Math.max(0, Math.min(s.x, W - s.w));
       s.y = Math.max(0, Math.min(s.y, H - s.h));
 
@@ -764,7 +775,6 @@
       s.x+=s.vx;
       s.y+=s.vy;
 
-      // HARD boundary: gif edges never leave playground
       if(s.x<=0){ s.x=0; s.vx*=-1; }
       if(s.y<=0){ s.y=0; s.vy*=-1; }
       if(s.x+s.w>=W){ s.x=Math.max(0,W-s.w); s.vx*=-1; }
@@ -784,7 +794,7 @@
     gifStage.innerHTML="";
   }
 
-  // ----- OPENING FX (play sound + animate face.png, then open gift) -----
+  // ----- OPENING FX -----
   function playOpeningFxThen(openGiftFn){
     if (fxRunning) return;
     fxRunning = true;
@@ -858,12 +868,11 @@
     if (e.key === 'Escape') closeModal();
   });
 
-  // Gift clicks -> play FX then open
   gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
   gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
   gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
 
-  // ----- Gift 3: open ONLY ONCE + auto type AFTER open -----
+  // ----- Gift 3 typing -----
   let cardOpenedOnce = false;
 
   const LETTER_TEXT =
@@ -943,13 +952,10 @@ Love can overcome anything`;
     if (cardOpenedOnce) return;
     cardOpenedOnce = true;
     envelope.classList.add('open');
-
-    // Start typing after the letter begins sliding out
     setTimeout(startTyping, 650);
   }
   envelope.addEventListener('click', openEnvelopeOnce);
 
-  // ----- Music button (manual toggle) -----
   musicBtn.addEventListener('click', async ()=>{
     try{
       if (gift3Music.paused){
@@ -999,7 +1005,6 @@ Love can overcome anything`;
   window.addEventListener('load', positionYes);
   window.addEventListener('resize', ()=>{
     positionYes();
-    // keep gifs inside after resize by clamping next frame
   });
 </script>
 
