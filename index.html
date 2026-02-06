@@ -484,7 +484,7 @@
       <p id="gift2Text"></p>
       <div class="mediaBox">
         <video id="gift2Video" controls playsinline preload="metadata">
-          <source src="gift2.mp4" type="video/mp4">
+          <source src="https://drive.google.com/uc?export=download&id=1QvK6DIIW55rx91H9UzNpsBDUAzlQj9nQ" type="video/mp4">
           Your browser does not support the video tag.
         </video>
       </div>
@@ -691,7 +691,6 @@
     gifStage.appendChild(wrap);
 
     img.onload=()=>{
-      // IMPORTANT: use the *playground* as the true boundary
       const W=playground.clientWidth;
       const H=playground.clientHeight;
 
@@ -752,7 +751,6 @@
     gifStage.innerHTML="";
   }
 
-  // ----- OPENING FX (play sound + animate face.png, then open gift) -----
   function playOpeningFxThen(openGiftFn){
     if (fxRunning) return;
     fxRunning = true;
@@ -776,7 +774,6 @@
     }, 2000);
   }
 
-  // ----- Modal helpers -----
   function openModal(which){
     overlay.classList.add('show');
 
@@ -821,23 +818,20 @@
     if (e.key === 'Escape') closeModal();
   });
 
-  // Gift clicks -> play FX then open
   gift1Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(1)));
   gift2Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(2)));
   gift3Btn.addEventListener('click', ()=> playOpeningFxThen(()=>openModal(3)));
 
-  // ----- Gift 3: open ONLY ONCE (no flip back) -----
   let cardOpenedOnce = false;
 
   function openCardOnce(){
     if (cardOpenedOnce) return;
     cardOpenedOnce = true;
     loveCard.classList.add('open');
-    if (!typingState.completed) startTyping(); // auto type on open
+    if (!typingState.completed) startTyping();
   }
   loveCard.addEventListener('click', openCardOnce);
 
-  // ----- Music -----
   musicBtn.addEventListener('click', async ()=>{
     try{
       if (gift3Music.paused){
@@ -852,7 +846,6 @@
     }
   });
 
-  // ----- TYPEWRITER (Gift 3) -----
   const LETTER_TEXT =
 `Love can overcome anything
 Love can overcome anything
@@ -924,7 +917,6 @@ Love can overcome anything`;
     typingState.timer = setTimeout(step, 250);
   }
 
-  // ----- Main events -----
   yesBtn.addEventListener('click', ()=>{
     stopAndClearGifs();
     hideButtons();
